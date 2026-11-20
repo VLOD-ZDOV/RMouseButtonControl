@@ -35,7 +35,6 @@ public partial class MouseListenerService : IMouseListener
     private readonly ILogger<MouseListenerService> _logger;
     private readonly IReactiveGlobalHook _hook;
     private readonly IGetCurrentWindow _currentWindowService;
-    private Thread? _thread;
     private readonly IDisposable? _mouseMovedDisposable;
     private readonly IDisposable? _mousePressedDisposable;
     private readonly IDisposable? _mouseReleasedDisposable;
@@ -88,12 +87,7 @@ public partial class MouseListenerService : IMouseListener
 
     public void Run()
     {
-        _thread = new Thread(() =>
-        {
-            LogStartup(_logger);
-            _hook.Run();
-        });
-        _thread.Start();
+        // No-op: C# global hook disabled. Rust daemon handles all low-level OS hooks.
     }
 
     /// <summary>
@@ -101,48 +95,7 @@ public partial class MouseListenerService : IMouseListener
     /// </summary>
     /// <param name="args"></param>
     /// <returns></returns>
-    /// <exception cref="ArgumentOutOfRangeException"></exception>
-    private bool ShouldSuppressEvent(NewMouseHookEventArgs args) =>
-        args.Button switch
-        {
-            YMouseButton.MouseButton1 => _profiles.Any(p =>
-                p is { Checked: true, MouseButton1.BlockOriginalMouseInput: true }
-                && (p.Process == "*" || (args.ActiveWindow?.Contains(p.Process) ?? false))
-            ),
-            YMouseButton.MouseButton2 => _profiles.Any(p =>
-                p is { Checked: true, MouseButton2.BlockOriginalMouseInput: true }
-                && (p.Process == "*" || (args.ActiveWindow?.Contains(p.Process) ?? false))
-            ),
-            YMouseButton.MouseButton3 => _profiles.Any(p =>
-                p is { Checked: true, MouseButton3.BlockOriginalMouseInput: true }
-                && (p.Process == "*" || (args.ActiveWindow?.Contains(p.Process) ?? false))
-            ),
-            YMouseButton.MouseButton4 => _profiles.Any(p =>
-                p is { Checked: true, MouseButton4.BlockOriginalMouseInput: true }
-                && (p.Process == "*" || (args.ActiveWindow?.Contains(p.Process) ?? false))
-            ),
-            YMouseButton.MouseButton5 => _profiles.Any(p =>
-                p is { Checked: true, MouseButton5.BlockOriginalMouseInput: true }
-                && (p.Process == "*" || (args.ActiveWindow?.Contains(p.Process) ?? false))
-            ),
-            YMouseButton.MouseWheelUp => _profiles.Any(p =>
-                p is { Checked: true, MouseWheelUp.BlockOriginalMouseInput: true }
-                && (p.Process == "*" || (args.ActiveWindow?.Contains(p.Process) ?? false))
-            ),
-            YMouseButton.MouseWheelDown => _profiles.Any(p =>
-                p is { Checked: true, MouseWheelDown.BlockOriginalMouseInput: true }
-                && (p.Process == "*" || (args.ActiveWindow?.Contains(p.Process) ?? false))
-            ),
-            YMouseButton.MouseWheelLeft => _profiles.Any(p =>
-                p is { Checked: true, MouseWheelLeft.BlockOriginalMouseInput: true }
-                && (p.Process == "*" || (args.ActiveWindow?.Contains(p.Process) ?? false))
-            ),
-            YMouseButton.MouseWheelRight => _profiles.Any(p =>
-                p is { Checked: true, MouseWheelRight.BlockOriginalMouseInput: true }
-                && (p.Process == "*" || (args.ActiveWindow?.Contains(p.Process) ?? false))
-            ),
-            _ => throw new ArgumentOutOfRangeException(),
-        };
+    private bool ShouldSuppressEvent(NewMouseHookEventArgs args) => false;
 
     private void ConvertMouseWheelEvent(MouseWheelHookEventArgs e)
     {
@@ -252,8 +205,6 @@ public partial class MouseListenerService : IMouseListener
         _mouseWheelDisposable?.Dispose();
 
         _hook.Dispose();
-
-        _thread?.Join();
     }
 
     [LoggerMessage(LogLevel.Information, "Translate press {Button}")]

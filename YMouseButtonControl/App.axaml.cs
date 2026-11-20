@@ -35,7 +35,6 @@ namespace YMouseButtonControl;
 public partial class App : Application
 {
     public IServiceProvider? Container { get; private set; }
-    private IBackgroundTasksRunner? _backgroundTasksRunner;
 
     public override void Initialize()
     {
@@ -165,46 +164,10 @@ public partial class App : Application
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                var isSettingsMode = desktop.Args?.Contains("--settings") == true;
-
-                if (isSettingsMode)
-                {
-                    var mainWindow = (Window)Container!.GetRequiredService<IMainWindow>();
-                    mainWindow.DataContext = Container.GetRequiredService<IMainWindowViewModel>();
-                    desktop.MainWindow = mainWindow;
-                    desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
-                }
-                else
-                {
-                    var appVm = Container?.GetRequiredService<IAppViewModel>() as AppViewModel;
-                    DataContext = appVm;
-                    if (appVm is not null)
-                    {
-                        SetupTrayIcon(appVm);
-                    }
-
-                    _backgroundTasksRunner = Container?.GetRequiredService<IBackgroundTasksRunner>();
-                    var getBoolSettingHandler =
-                        Container?.GetRequiredService<GetBoolSetting.Handler>()
-                        ?? throw new Exception($"Error retrieving {nameof(GetBoolSetting.Handler)}");
-                    var startMinimized = getBoolSettingHandler.Execute(
-                        new GetBoolSetting.Query("StartMinimized")
-                    );
-
-                    if (!startMinimized)
-                    {
-                        var mainWindow = (Window)Container.GetRequiredService<IMainWindow>();
-                        mainWindow.DataContext = Container.GetRequiredService<IMainWindowViewModel>();
-                        desktop.MainWindow = mainWindow;
-                    }
-
-                    desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-
-                    desktop.Exit += (sender, args) =>
-                    {
-                        _backgroundTasksRunner?.Dispose();
-                    };
-                }
+                var mainWindow = (Window)Container!.GetRequiredService<IMainWindow>();
+                mainWindow.DataContext = Container.GetRequiredService<IMainWindowViewModel>();
+                desktop.MainWindow = mainWindow;
+                desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
             }
 
             base.OnFrameworkInitializationCompleted();
