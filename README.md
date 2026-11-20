@@ -20,14 +20,7 @@
 - **Desktop & Tray Integration:**
   - Standard FreeDesktop / KDE Plasma `StatusNotifierItem` system tray menu.
   - Profile switcher, pause/resume toggle, autostart management, and one-click database reload.
-- **7 Macro Simulation Modes:**
-  1. As mouse button is pressed
-  2. As mouse button is released
-  3. During (press on down, release on up)
-  4. In another thread as mouse button is pressed
-  5. In another thread as mouse button is released
-  6. Repeatedly while button is held down (with configurable millisecond delay and 10% random jitter)
-  7. Sticky modes (hold or repeat until pressed again)
+- **Flexible Macro & Keystroke Simulation:** Support for press/release triggers, chorded hotkeys, sticky keys, and auto-repeat with configurable delay.
 - **Automatic Process & Window Matching:**
   - Profiles activate automatically based on the active foreground window.
   - Full support for native Linux applications as well as Wine and Proton games.
