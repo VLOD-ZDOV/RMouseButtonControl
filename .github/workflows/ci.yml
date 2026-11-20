@@ -12,6 +12,7 @@ jobs:
   rust-core:
     name: Build Rust Engine Daemon
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,9 +23,11 @@ jobs:
           targets: x86_64-unknown-linux-gnu, x86_64-pc-windows-gnu
 
       - name: Install Linux build dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libx11-dev libxtst-dev gcc-mingw-w64-x86-64
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends libx11-dev libxtst-dev gcc-mingw-w64-x86-64
 
       - name: Run Rust unit and integration tests
         run: cargo test --manifest-path RMouseButtonControl/Cargo.toml
@@ -50,6 +53,7 @@ jobs:
   qt-gui:
     name: Build Qt6 Native GUI (Linux)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -73,6 +77,7 @@ jobs:
   qt-gui-windows:
     name: Build Qt6 Native GUI (Windows)
     runs-on: windows-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -104,6 +109,7 @@ jobs:
   avalonia-gui:
     name: Build C# Avalonia GUI
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -145,6 +151,7 @@ jobs:
     name: Package Release Bundles & Setup
     needs: [rust-core, qt-gui, qt-gui-windows, avalonia-gui]
     runs-on: windows-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
