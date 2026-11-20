@@ -9,25 +9,23 @@ on:
   workflow_dispatch:
 
 jobs:
-  rust-core:
-    name: Build Rust Engine Daemon
+  rust-core-linux:
+    name: Build Rust Engine Daemon (Linux)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-unknown-linux-gnu, x86_64-pc-windows-gnu
 
       - name: Install Linux build dependencies
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends libx11-dev libxtst-dev gcc-mingw-w64-x86-64
+          sudo apt-get install -y --no-install-recommends libx11-dev libxtst-dev
 
       - name: Run Rust unit and integration tests
         run: cargo test --manifest-path RMouseButtonControl/Cargo.toml
@@ -35,20 +33,31 @@ jobs:
       - name: Build Linux daemon binary
         run: cargo build --manifest-path RMouseButtonControl/Cargo.toml --release
 
-      - name: Build Windows daemon binary
-        run: cargo build --manifest-path RMouseButtonControl/Cargo.toml --target x86_64-pc-windows-gnu --release
-
       - name: Upload Linux daemon artifact
         uses: actions/upload-artifact@v4
         with:
           name: rmousebuttoncontrol-linux-x64
           path: RMouseButtonControl/target/release/rmousebuttoncontrol
 
+  rust-core-windows:
+    name: Build Rust Engine Daemon (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Windows daemon binary
+        run: cargo build --manifest-path RMouseButtonControl/Cargo.toml --release
+
       - name: Upload Windows daemon artifact
         uses: actions/upload-artifact@v4
         with:
           name: rmousebuttoncontrol-windows-x64
-          path: RMouseButtonControl/target/x86_64-pc-windows-gnu/release/rmousebuttoncontrol.exe
+          path: RMouseButtonControl/target/release/rmousebuttoncontrol.exe
 
   qt-gui:
     name: Build Qt6 Native GUI (Linux)
@@ -149,7 +158,7 @@ jobs:
 
   release-packages:
     name: Package Release Bundles & Setup
-    needs: [rust-core, qt-gui, qt-gui-windows, avalonia-gui]
+    needs: [rust-core-linux, rust-core-windows, qt-gui, qt-gui-windows, avalonia-gui]
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
