@@ -10,20 +10,31 @@
 #include <QTextStream>
 #include <QIcon>
 
-static QString autostartPath() {
+#include <QCoreApplication>
 #ifdef Q_OS_WIN
-    return QDir::homePath() + "/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup/RMouseButtonControl.lnk";
+#include <QSettings>
+#endif
+
+bool GlobalSettingsDialog::isAutostartEnabled() {
+#ifdef Q_OS_WIN
+    QSettings bootSettings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat);
+    return bootSettings.contains("RMouseButtonControl");
 #else
-    return QDir::homePath() + "/.config/autostart/RMouseButtonControl.desktop";
+    return QFile::exists(QDir::homePath() + "/.config/autostart/RMouseButtonControl.desktop");
 #endif
 }
 
-static bool isAutostartEnabled() {
-    return QFile::exists(autostartPath());
-}
-
-static void setAutostartEnabled(bool enable) {
-    QString path = autostartPath();
+void GlobalSettingsDialog::setAutostartEnabled(bool enable) {
+#ifdef Q_OS_WIN
+    QSettings bootSettings("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run", QSettings::NativeFormat);
+    if (enable) {
+        QString appPath = QDir::toNativeSeparators(QCoreApplication::applicationFilePath());
+        bootSettings.setValue("RMouseButtonControl", "\"" + appPath + "\" --minimized");
+    } else {
+        bootSettings.remove("RMouseButtonControl");
+    }
+#else
+    QString path = QDir::homePath() + "/.config/autostart/RMouseButtonControl.desktop";
     if (!enable) {
         if (QFile::exists(path)) {
             QFile::remove(path);
@@ -44,6 +55,7 @@ static void setAutostartEnabled(bool enable) {
                 << "Comment=RMouseButtonControl Daemon\n";
         }
     }
+#endif
 }
 
 GlobalSettingsDialog::GlobalSettingsDialog(const SettingsModel& settings, QWidget *parent)

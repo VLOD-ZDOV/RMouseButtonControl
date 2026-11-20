@@ -13,6 +13,9 @@ public:
 
     SettingsModel getSettings() const;
 
+    static bool isAutostartEnabled();
+    static void setAutostartEnabled(bool enable);
+
 private slots:
     void checkDirty();
 

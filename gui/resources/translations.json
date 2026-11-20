@@ -103,6 +103,9 @@
     "Set_LanguageSystem": "System default",
     "Tray_Setup": "Setup",
     "Tray_RunAtStartup": "Run at startup",
+    "Tray_Profiles": "Profiles",
+    "Tray_Interface": "Interface (GUI)",
+    "Tray_ReloadProfiles": "Reload Profiles",
     "Tray_Exit": "Exit"
   },
   "ru": {
@@ -209,6 +212,9 @@
     "Set_LanguageSystem": "Системный язык по умолчанию",
     "Tray_Setup": "Настройка",
     "Tray_RunAtStartup": "Запускать при входе в систему",
+    "Tray_Profiles": "Профили",
+    "Tray_Interface": "Интерфейс (GUI)",
+    "Tray_ReloadProfiles": "Перезагрузить профили",
     "Tray_Exit": "Выход"
   },
   "de": {
@@ -312,6 +318,9 @@
     "Set_LanguageSystem": "Systemstandard",
     "Tray_Setup": "Einrichten",
     "Tray_RunAtStartup": "Beim Systemstart ausführen",
+    "Tray_Profiles": "Profile",
+    "Tray_Interface": "Oberfläche (GUI)",
+    "Tray_ReloadProfiles": "Profile neu laden",
     "Tray_Exit": "Beenden"
   },
   "es": {
@@ -417,6 +426,9 @@
     "Set_LanguageSystem": "Predeterminado del sistema",
     "Tray_Setup": "Configurar",
     "Tray_RunAtStartup": "Ejecutar al inicio",
+    "Tray_Profiles": "Perfiles",
+    "Tray_Interface": "Interfaz (GUI)",
+    "Tray_ReloadProfiles": "Recargar perfiles",
     "Tray_Exit": "Salir"
   },
   "fr": {
@@ -519,6 +531,9 @@
     "Set_LanguageSystem": "Langue système par défaut",
     "Tray_Setup": "Configuration",
     "Tray_RunAtStartup": "Lancer au démarrage",
+    "Tray_Profiles": "Profils",
+    "Tray_Interface": "Interface (GUI)",
+    "Tray_ReloadProfiles": "Recharger les profils",
     "Tray_Exit": "Quitter"
   },
   "uk": {
@@ -625,6 +640,9 @@
     "Set_LanguageSystem": "Системна мова за замовчуванням",
     "Tray_Setup": "Налаштування",
     "Tray_RunAtStartup": "Запускати під час входу в систему",
+    "Tray_Profiles": "Профілі",
+    "Tray_Interface": "Інтерфейс (GUI)",
+    "Tray_ReloadProfiles": "Перезавантажити профілі",
     "Tray_Exit": "Вихід"
   },
   "pt": {
@@ -728,6 +746,9 @@
     "Set_LanguageSystem": "Padrão do sistema",
     "Tray_Setup": "Configurar",
     "Tray_RunAtStartup": "Executar na inicialização",
+    "Tray_Profiles": "Perfis",
+    "Tray_Interface": "Interface (GUI)",
+    "Tray_ReloadProfiles": "Recarregar perfis",
     "Tray_Exit": "Sair"
   },
   "zh": {
@@ -835,6 +856,9 @@
     "Set_LanguageSystem": "系统默认",
     "Tray_Setup": "设置",
     "Tray_RunAtStartup": "开机启动",
+    "Tray_Profiles": "配置文件",
+    "Tray_Interface": "界面 (GUI)",
+    "Tray_ReloadProfiles": "重新加载配置",
     "Tray_Exit": "退出"
   }
 }

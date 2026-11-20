@@ -17,7 +17,10 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFile>
+#include <QDir>
 #include <QIcon>
+#include <QProcess>
+#include <QActionGroup>
 #include <QDebug>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -625,7 +628,7 @@ void MainWindow::onOpenSettings() {
         applyTheme(m_settings.theme);
 
         Localization::instance().setLanguage(m_settings.language);
-        updateTrayTranslations();
+        updateTrayMenu();
     }
 }
 
@@ -994,22 +997,9 @@ void MainWindow::setupTray() {
     m_trayIcon->setToolTip("RMouseButtonControl");
 
     m_trayMenu = new QMenu(this);
+    connect(m_trayMenu, &QMenu::aboutToShow, this, &MainWindow::updateTrayMenu);
 
-    m_traySetupAction = m_trayMenu->addAction(QIcon(":/mouse.png"), Tr("Tray_Setup"));
-    connect(m_traySetupAction, &QAction::triggered, this, [this]() {
-        showNormal();
-        activateWindow();
-        raise();
-    });
-
-    m_trayMenu->addSeparator();
-
-    m_trayExitAction = m_trayMenu->addAction(Tr("Tray_Exit"));
-    connect(m_trayExitAction, &QAction::triggered, this, [this]() {
-        m_forceQuit = true;
-        close();
-        QApplication::quit();
-    });
+    updateTrayMenu();
 
     m_trayIcon->setContextMenu(m_trayMenu);
 
@@ -1028,13 +1018,163 @@ void MainWindow::setupTray() {
     m_trayIcon->show();
 }
 
-void MainWindow::updateTrayTranslations() {
-    if (m_traySetupAction) {
-        m_traySetupAction->setText(Tr("Tray_Setup"));
+void MainWindow::updateTrayMenu() {
+    if (!m_trayMenu) return;
+    m_trayMenu->clear();
+
+    // 1. Setup window (opens GUI configurator)
+    QAction* setupAction = m_trayMenu->addAction(QIcon(":/mouse.png"), Tr("Tray_Setup"));
+    connect(setupAction, &QAction::triggered, this, [this]() {
+        showNormal();
+        activateWindow();
+        raise();
+    });
+
+    m_trayMenu->addSeparator();
+
+    // 2. GUI Selector Submenu
+    QMenu* guiMenu = m_trayMenu->addMenu(Tr("Tray_Interface"));
+
+    QAction* openQtAction = guiMenu->addAction("Открыть Qt интерфейс");
+    connect(openQtAction, &QAction::triggered, this, [this]() {
+        showNormal();
+        activateWindow();
+        raise();
+    });
+
+    QAction* openCSharpAction = guiMenu->addAction("Открыть C# Avalonia интерфейс");
+    connect(openCSharpAction, &QAction::triggered, this, [this]() {
+        launchCSharpGui();
+    });
+
+    guiMenu->addSeparator();
+
+    QActionGroup* guiGroup = new QActionGroup(guiMenu);
+    QAction* defQtAction = guiMenu->addAction("По умолчанию: Qt");
+    defQtAction->setCheckable(true);
+    defQtAction->setChecked(m_settings.preferredGui != "csharp" && m_settings.preferredGui != "avalonia");
+    guiGroup->addAction(defQtAction);
+    connect(defQtAction, &QAction::triggered, this, [this]() {
+        m_settings.preferredGui = "qt";
+        Database::instance().saveSettings(m_settings);
+    });
+
+    QAction* defCSharpAction = guiMenu->addAction("По умолчанию: C# Avalonia");
+    defCSharpAction->setCheckable(true);
+    defCSharpAction->setChecked(m_settings.preferredGui == "csharp" || m_settings.preferredGui == "avalonia");
+    guiGroup->addAction(defCSharpAction);
+    connect(defCSharpAction, &QAction::triggered, this, [this]() {
+        m_settings.preferredGui = "csharp";
+        Database::instance().saveSettings(m_settings);
+    });
+
+    m_trayMenu->addSeparator();
+
+    // 3. Autostart checkbox
+    bool isAutostart = GlobalSettingsDialog::isAutostartEnabled();
+    QAction* autostartAction = m_trayMenu->addAction(Tr("Tray_RunAtStartup"));
+    autostartAction->setCheckable(true);
+    autostartAction->setChecked(isAutostart);
+    connect(autostartAction, &QAction::toggled, this, [](bool checked) {
+        GlobalSettingsDialog::setAutostartEnabled(checked);
+    });
+
+    m_trayMenu->addSeparator();
+
+    // 4. Profiles Submenu
+    QString profilesTitle = QString("%1 (%2)").arg(Tr("Tray_Profiles")).arg(m_profiles.size());
+    QMenu* profilesMenu = m_trayMenu->addMenu(profilesTitle);
+
+    for (int i = 0; i < m_profiles.size(); ++i) {
+        const auto& p = m_profiles[i];
+        QString title = p.name;
+        if (p.isDefault) {
+            title += " (Default)";
+        }
+        QMenu* pSub = profilesMenu->addMenu(title);
+
+        QAction* selectAction = pSub->addAction("Выбрать профиль");
+        connect(selectAction, &QAction::triggered, this, [this, i]() {
+            showNormal();
+            activateWindow();
+            raise();
+            if (i >= 0 && i < m_profiles.size()) {
+                m_currentProfileIndex = i;
+                displayCurrentProfile();
+                if (m_profilesList && i < m_profilesList->count()) {
+                    m_profilesList->setCurrentRow(i);
+                }
+            }
+        });
+        pSub->addSeparator();
+
+        bool hasMappings = false;
+        static const char* btnNames[] = {
+            "Кнопка 1 (Left)", "Кнопка 2 (Right)", "Кнопка 3 (Middle)",
+            "Кнопка 4 (XButton 1)", "Кнопка 5 (XButton 2)",
+            "Колесо вверх", "Колесо вниз", "Наклон влево", "Наклон вправо"
+        };
+        for (int mb = 0; mb < 9; ++mb) {
+            ButtonMappingModel bm = p.getSelectedMapping(mb);
+            if (!bm.discriminator.isEmpty() && bm.discriminator != "NothingMapping") {
+                QString desc = QString("  • %1: %2")
+                    .arg(btnNames[mb])
+                    .arg(getActionDisplayName(bm.discriminator, bm.keys));
+                QAction* mapAct = pSub->addAction(desc);
+                mapAct->setEnabled(false);
+                hasMappings = true;
+            }
+        }
+        if (!hasMappings) {
+            QAction* noAct = pSub->addAction("  (Нет переназначений)");
+            noAct->setEnabled(false);
+        }
     }
-    if (m_trayExitAction) {
-        m_trayExitAction->setText(Tr("Tray_Exit"));
+
+    // 5. Reload Profiles
+    QAction* reloadAction = m_trayMenu->addAction(Tr("Tray_ReloadProfiles"));
+    connect(reloadAction, &QAction::triggered, this, [this]() {
+        loadData();
+    });
+
+    m_trayMenu->addSeparator();
+
+    // 6. Exit
+    QAction* exitAction = m_trayMenu->addAction(Tr("Tray_Exit"));
+    connect(exitAction, &QAction::triggered, this, [this]() {
+        m_forceQuit = true;
+        close();
+        QApplication::quit();
+    });
+}
+
+void MainWindow::launchCSharpGui() {
+    QStringList candidates = {
+        QCoreApplication::applicationDirPath() + "/csharp-gui/YMouseButtonControl.exe",
+        QCoreApplication::applicationDirPath() + "/YMouseButtonControl.exe",
+        QDir::homePath() + "/.local/bin/ymouse-settings",
+        QDir::homePath() + "/.local/lib/ymouse/YMouseButtonControl",
+        "ymouse-settings",
+        "YMouseButtonControl"
+    };
+    for (const QString& path : candidates) {
+        if (QFile::exists(path)) {
+            QProcess::startDetached(path, {"--settings"});
+            return;
+        }
     }
+    QProcess::startDetached("ymouse-settings", {"--settings"});
+}
+
+QString MainWindow::getActionDisplayName(const QString& discriminator, const QString& keys) {
+    if (discriminator == "DisabledMapping") {
+        return Tr("Map_Disabled");
+    } else if (discriminator == "SimulatedKeystroke") {
+        return keys.isEmpty() ? Tr("Map_SimulatedUndefined") : QString("%1 (%2)").arg(Tr("Map_SimulatedUndefined"), keys);
+    } else if (discriminator == "RightClick") {
+        return Tr("Map_RightClick");
+    }
+    return Tr("Map_NoChange");
 }
 
 void MainWindow::closeEvent(QCloseEvent *event) {

@@ -47,12 +47,12 @@ private:
     void applyTheme(int themeIndex);
     void setDirty(bool dirty);
     void setupTray();
-    void updateTrayTranslations();
+    void updateTrayMenu();
+    void launchCSharpGui();
+    QString getActionDisplayName(const QString& discriminator, const QString& keys = QString());
 
     QSystemTrayIcon* m_trayIcon = nullptr;
     QMenu* m_trayMenu = nullptr;
-    QAction* m_traySetupAction = nullptr;
-    QAction* m_trayExitAction = nullptr;
     bool m_forceQuit = false;
 
     QVector<ProfileModel> m_profiles;
