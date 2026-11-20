@@ -12,8 +12,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
 
 if(NOT MSVC)
-    add_compile_options("$<$<CONFIG:Release>:-O3;-fPIE>")
-    add_link_options("$<$<CONFIG:Release>:-pie;-s>")
+    add_compile_options("$<$<CONFIG:Release>:-O3;-fPIC>")
+    add_link_options("$<$<CONFIG:Release>:-s>")
 endif()
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Sql)
