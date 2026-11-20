@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>mouse.ico</file>
+        <file>gear_icon1.png</file>
+        <file>crosshair.png</file>
+        <file>translations.json</file>
+    </qresource>
+</RCC>

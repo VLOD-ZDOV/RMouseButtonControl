@@ -13,22 +13,4 @@
     <Design.DataContext>
 		<app:AppViewModel />
     </Design.DataContext>
-    
-    <TrayIcon.Icons>
-        <TrayIcons>
-            <TrayIcon Icon="/Resources/mouse.ico" ToolTipText="{Binding ToolTipText}">
-                <TrayIcon.Menu>
-                    <NativeMenu>
-                        <NativeMenuItem Header="{Binding SetupHeader}" Command="{Binding SetupCommand}" />
-                        <NativeMenuItem Header="{Binding RunAtStartupHeader}"
-                                        IsEnabled="{Binding RunAtStartupIsEnabled}"
-                                        Command="{Binding RunAtStartupCommand}" />
-                        <NativeMenuItemSeparator />
-                        <NativeMenuItem Header="{Binding ExitHeader}" Command="{Binding ExitCommand}" />
-                    </NativeMenu>
-                </TrayIcon.Menu>
-            </TrayIcon>
-        </TrayIcons>
-    </TrayIcon.Icons>
-    
 </Application>

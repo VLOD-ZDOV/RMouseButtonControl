@@ -1,0 +1,21 @@
+[package]
+name = "rmousebuttoncontrol"
+version = "0.1.0"
+edition = "2021"
+description = "High-performance, pure-safe Rust core engine for RMouseButtonControl (mouse remapping & input simulation)"
+
+[dependencies]
+rdev = "0.5"
+fastrand = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rusqlite = { version = "0.43", features = ["bundled"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+x11rb = { version = "0.14", default-features = false, features = ["extra-traits"] }
+evdev = "0.13"
+ksni = { version = "0.3.7", features = ["blocking"] }
+
+[dev-dependencies]

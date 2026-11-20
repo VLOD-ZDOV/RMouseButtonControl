@@ -1,0 +1,111 @@
+name: CI & Release Build
+
+on:
+  push:
+    branches: [ "master" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+jobs:
+  rust-core:
+    name: Build Rust Engine Daemon
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu, x86_64-pc-windows-gnu
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-dev libxtst-dev gcc-mingw-w64-x86-64
+
+      - name: Run Rust unit and integration tests
+        run: cargo test --manifest-path RMouseButtonControl/Cargo.toml
+
+      - name: Build Linux daemon binary
+        run: cargo build --manifest-path RMouseButtonControl/Cargo.toml --release
+
+      - name: Build Windows daemon binary
+        run: cargo build --manifest-path RMouseButtonControl/Cargo.toml --target x86_64-pc-windows-gnu --release
+
+      - name: Upload Linux daemon artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rmousebuttoncontrol-linux-x64
+          path: RMouseButtonControl/target/release/rmousebuttoncontrol
+
+      - name: Upload Windows daemon artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rmousebuttoncontrol-windows-x64
+          path: RMouseButtonControl/target/x86_64-pc-windows-gnu/release/rmousebuttoncontrol.exe
+
+  qt-gui:
+    name: Build Qt6 Native GUI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Qt6 and CMake
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qt6-base-dev cmake g++
+
+      - name: Configure and build Qt GUI
+        run: |
+          cmake -B build -S gui -DCMAKE_BUILD_TYPE=Release
+          cmake --build build -j $(nproc)
+
+      - name: Upload Qt GUI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rmouse-gui-linux-x64
+          path: build/rmouse-gui
+
+  avalonia-gui:
+    name: Build C# Avalonia GUI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish Linux Avalonia GUI
+        run: |
+          dotnet publish YMouseButtonControl/YMouseButtonControl.csproj \
+            -c Release \
+            -r linux-x64 \
+            --self-contained \
+            -o publish/linux-x64
+
+      - name: Publish Windows Avalonia GUI
+        run: |
+          dotnet publish YMouseButtonControl/YMouseButtonControl.csproj \
+            -c Release \
+            -r win-x64 \
+            --self-contained \
+            -o publish/win-x64
+
+      - name: Upload Avalonia Linux GUI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rmouse-avalonia-gui-linux-x64
+          path: publish/linux-x64/
+
+      - name: Upload Avalonia Windows GUI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rmouse-avalonia-gui-win-x64
+          path: publish/win-x64/

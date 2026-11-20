@@ -18,6 +18,8 @@ namespace YMouseButtonControl.Core.ViewModels.Dialogs.GlobalSettingsDialog;
 
 public interface IGlobalSettingsDialogViewModel;
 
+public record GuiOption(string Code, string Name);
+
 public class GlobalSettingsDialogViewModel : DialogBase, IGlobalSettingsDialogViewModel
 {
     private GetBoolSetting.BoolSettingVm _startMinimizedSetting;
@@ -28,6 +30,8 @@ public class GlobalSettingsDialogViewModel : DialogBase, IGlobalSettingsDialogVi
     private ListThemes.ThemeVm _selectedTheme;
     private ObservableCollection<LanguageOption> _languageCollection;
     private LanguageOption _selectedLanguage;
+    private ObservableCollection<GuiOption> _guiCollection;
+    private GuiOption _selectedGui;
     private readonly ObservableAsPropertyHelper<bool>? _applyIsExec;
     private readonly ThemeVariant _themeVariant;
 
@@ -66,6 +70,42 @@ public class GlobalSettingsDialogViewModel : DialogBase, IGlobalSettingsDialogVi
             _languageCollection.FirstOrDefault(x => x.Code == currentLanguage)
             ?? _languageCollection.First();
 
+        _guiCollection =
+        [
+            new GuiOption("qt", "Qt (Рекомендуется / Recommended)"),
+            new GuiOption("csharp", "C# Avalonia (Оригинальный / Original)")
+        ];
+        var currentGui = getStringSettingHandler.Execute(
+            new Queries.Settings.Models.Query("PreferredGui")
+        );
+        _selectedGui =
+            _guiCollection.FirstOrDefault(x => x.Code == currentGui)
+            ?? _guiCollection.First();
+
+        OpenQtGuiCommand = ReactiveCommand.Create(() =>
+        {
+            try
+            {
+                var proc = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "rmouse-gui",
+                    UseShellExecute = true
+                };
+                System.Diagnostics.Process.Start(proc);
+            }
+            catch
+            {
+                var fallback = System.IO.Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".local", "bin", "rmouse-gui"
+                );
+                if (System.IO.File.Exists(fallback))
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = fallback, UseShellExecute = true });
+                }
+            }
+        });
+
         // Update the theme setting selected theme value
         this.WhenAnyValue(x => x.SelectedTheme).Subscribe(x => ThemeSetting.Value = x.Id);
 
@@ -96,13 +136,20 @@ public class GlobalSettingsDialogViewModel : DialogBase, IGlobalSettingsDialogVi
                 val.Code
                 != getStringSettingHandler.Execute(new Queries.Settings.Models.Query("Language"))
         );
+        var guiChanged = this.WhenAnyValue(
+            x => x.SelectedGui,
+            selector: val =>
+                val.Code
+                != (getStringSettingHandler.Execute(new Queries.Settings.Models.Query("PreferredGui")) ?? "qt")
+        );
         var applyIsExecObs = this.WhenAnyValue(x => x.AppIsExec);
         var canSave = startMinimizedChanged
             .Merge(loggingChanged)
             .Merge(startMenuChanged)
             .Merge(applyIsExecObs)
             .Merge(themeChanged)
-            .Merge(languageChanged);
+            .Merge(languageChanged)
+            .Merge(guiChanged);
         ApplyCommand = ReactiveCommand.CreateFromTask(
             async () =>
             {
@@ -141,6 +188,9 @@ public class GlobalSettingsDialogViewModel : DialogBase, IGlobalSettingsDialogVi
                 );
                 await updateSettingStringHandler.ExecuteAsync(
                     new UpdateSetting<string>.Command("Language", SelectedLanguage.Code)
+                );
+                await updateSettingStringHandler.ExecuteAsync(
+                    new UpdateSetting<string>.Command("PreferredGui", SelectedGui.Code)
                 );
             },
             canSave
@@ -199,6 +249,20 @@ public class GlobalSettingsDialogViewModel : DialogBase, IGlobalSettingsDialogVi
         get => _selectedLanguage;
         set => this.RaiseAndSetIfChanged(ref _selectedLanguage, value);
     }
+
+    public ObservableCollection<GuiOption> GuiCollection
+    {
+        get => _guiCollection;
+        set => this.RaiseAndSetIfChanged(ref _guiCollection, value);
+    }
+
+    public GuiOption SelectedGui
+    {
+        get => _selectedGui;
+        set => this.RaiseAndSetIfChanged(ref _selectedGui, value);
+    }
+
+    public ReactiveCommand<Unit, Unit> OpenQtGuiCommand { get; init; }
 
     public ReactiveCommand<Unit, Unit> ApplyCommand { get; init; }
 

@@ -163,30 +163,48 @@ public partial class App : Application
 
         try
         {
-            DataContext = Container?.GetRequiredService<IAppViewModel>();
-            _backgroundTasksRunner = Container?.GetRequiredService<IBackgroundTasksRunner>();
-            var getBoolSettingHandler =
-                Container?.GetRequiredService<GetBoolSetting.Handler>()
-                ?? throw new Exception($"Error retrieving {nameof(GetBoolSetting.Handler)}");
-            var startMinimized = getBoolSettingHandler.Execute(
-                new GetBoolSetting.Query("StartMinimized")
-            );
-
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                if (!startMinimized)
+                var isSettingsMode = desktop.Args?.Contains("--settings") == true;
+
+                if (isSettingsMode)
                 {
-                    var mainWindow = (Window)Container.GetRequiredService<IMainWindow>();
+                    var mainWindow = (Window)Container!.GetRequiredService<IMainWindow>();
                     mainWindow.DataContext = Container.GetRequiredService<IMainWindowViewModel>();
                     desktop.MainWindow = mainWindow;
+                    desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
                 }
-
-                desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-
-                desktop.Exit += (sender, args) =>
+                else
                 {
-                    _backgroundTasksRunner?.Dispose();
-                };
+                    var appVm = Container?.GetRequiredService<IAppViewModel>() as AppViewModel;
+                    DataContext = appVm;
+                    if (appVm is not null)
+                    {
+                        SetupTrayIcon(appVm);
+                    }
+
+                    _backgroundTasksRunner = Container?.GetRequiredService<IBackgroundTasksRunner>();
+                    var getBoolSettingHandler =
+                        Container?.GetRequiredService<GetBoolSetting.Handler>()
+                        ?? throw new Exception($"Error retrieving {nameof(GetBoolSetting.Handler)}");
+                    var startMinimized = getBoolSettingHandler.Execute(
+                        new GetBoolSetting.Query("StartMinimized")
+                    );
+
+                    if (!startMinimized)
+                    {
+                        var mainWindow = (Window)Container.GetRequiredService<IMainWindow>();
+                        mainWindow.DataContext = Container.GetRequiredService<IMainWindowViewModel>();
+                        desktop.MainWindow = mainWindow;
+                    }
+
+                    desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
+                    desktop.Exit += (sender, args) =>
+                    {
+                        _backgroundTasksRunner?.Dispose();
+                    };
+                }
             }
 
             base.OnFrameworkInitializationCompleted();
@@ -195,6 +213,31 @@ public partial class App : Application
         {
             LogError(logger, e.Message, e.InnerException?.Message, e.StackTrace);
             throw;
+        }
+    }
+
+    private void SetupTrayIcon(AppViewModel vm)
+    {
+        try
+        {
+            var iconStream = Avalonia.Platform.AssetLoader.Open(new Uri("avares://YMouseButtonControl/Resources/mouse.ico"));
+            var trayIcon = new TrayIcon
+            {
+                Icon = new WindowIcon(iconStream),
+                ToolTipText = vm.ToolTipText,
+                Menu = new NativeMenu
+                {
+                    new NativeMenuItem { Header = vm.SetupHeader, Command = vm.SetupCommand },
+                    new NativeMenuItem { Header = vm.RunAtStartupHeader, Command = vm.RunAtStartupCommand, IsEnabled = vm.RunAtStartupIsEnabled },
+                    new NativeMenuItemSeparator(),
+                    new NativeMenuItem { Header = vm.ExitHeader, Command = vm.ExitCommand },
+                }
+            };
+            TrayIcon.SetIcons(this, new TrayIcons { trayIcon });
+        }
+        catch
+        {
+            // Ignore tray initialization errors on headless/sub-environments
         }
     }
 

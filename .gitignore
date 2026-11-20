@@ -457,3 +457,14 @@ $RECYCLE.BIN/
 ##
 .claude/
 CLAUDE.local.md
+
+# Reports and plans (local notes)
+docs/RUST_CORE_PLAN.md
+
+# Cargo & CMake build targets
+target/
+**/target/
+build/
+**/build/
+
+

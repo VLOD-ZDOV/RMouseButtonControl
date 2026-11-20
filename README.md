@@ -1,102 +1,143 @@
-# YMouseButtonControl
+# RMouseButtonControl
 
-This is an attempt at a cross-platform clone of X-Mouse-Button-Control.
+[English](#english) | [Русский](#русский)
 
-![YMouseButtonControl 0 22 0](https://github.com/user-attachments/assets/a42266b8-dead-4dfd-b894-2deba1e9aa7e)
+---
 
-## Usage
+<a name="english"></a>
+## English
 
-1. Download the latest release from the [Releases](https://github.com/FaithBeam/YMouseButtonControl/releases) page for your platform
-     * Alternatively, download the latest build from the [Actions tab](https://github.com/FaithBeam/YMouseButtonControl/actions)
-2. Extract the archive
-3. Run YMouseButtonControl
+**RMouseButtonControl** is a high-performance mouse remapping and macro automation utility. It combines a pure safe Rust background daemon with a fast native Qt6 graphical interface and an optional Fluent Avalonia C# interface.
 
-## Language
+### Highlights & Architecture
 
-YMouseButtonControl is localized into **English, Russian, German, Spanish, French, Ukrainian,
-Portuguese (Brazil) and Simplified Chinese**.
-By default it follows your operating system's UI language; you can override it in
-**Settings → Language**. Changing the language requires a restart (like the theme setting).
+- **High-Performance Rust Core Engine:**
+  - Written with `#![forbid(unsafe_code)]` for guaranteed memory safety and stability.
+  - Native Linux Kernel `/dev/uinput` virtual device driver for sub-millisecond input simulation, fully compatible with Wayland and gaming environments with anti-cheat.
+  - Userspace fallback driver for environments without direct `/dev/uinput` access.
+  - Low memory footprint (~10 MB RAM daemon) and negligible CPU usage.
+- **Dual GUI Frontends (Seamless Switcher):**
+  - **Qt6 Native GUI (Default):** Instant startup (<20 ms), lightweight (~20 MB RAM), responsive layout, and polished controls.
+  - **Avalonia C# GUI (Optional):** Original Fluent interface design with rich controls.
+  - Switch between GUIs at any time via the tray menu or settings dialog.
+- **Desktop & Tray Integration:**
+  - Standard FreeDesktop / KDE Plasma `StatusNotifierItem` system tray menu.
+  - Profile switcher, pause/resume toggle, autostart management, and one-click database reload.
+- **7 Macro Simulation Modes:**
+  1. As mouse button is pressed
+  2. As mouse button is released
+  3. During (press on down, release on up)
+  4. In another thread as mouse button is pressed
+  5. In another thread as mouse button is released
+  6. Repeatedly while button is held down (with configurable millisecond delay and 10% random jitter)
+  7. Sticky modes (hold or repeat until pressed again)
+- **Automatic Process & Window Matching:**
+  - Profiles activate automatically based on the active foreground window.
+  - Full support for native Linux applications as well as Wine and Proton games.
+- **5 Appearance Themes:**
+  - System (KDE Breeze native)
+  - Modern Dark (Harmonious Fluent/Breeze Dark)
+  - Modern Light (Clean White Fluent)
+  - AMOLED Black (Pure black `#000000` with high-contrast elements)
+  - Fusion
+- **Multi-language Support:**
+  - Localized into 8 languages: English, Russian, German, Spanish, French, Ukrainian, Portuguese, and Simplified Chinese.
 
-## Requirements
+### Installation & Build
 
-* [.NET 8.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
-  * On windows if you run YMouseButtonControl.exe, it will take you to the download automatically
-  * Self-contained release archives bundle the runtime, so nothing extra is required for those
+#### Prerequisites
+- **Linux:** `cargo`, `rustc`, `cmake`, `g++`, `qt6-base-dev`
+- **Optional (for C# GUI):** `.NET 8.0 SDK`
 
-### Linux
-
-*Ubuntu*: ```sudo apt install dotnet-runtime-8.0```
-
-*Fedora*: ```sudo dnf install dotnet-runtime-8.0```
-
-*Arch*: ```sudo pacman -S dotnet-runtime```
-
-## OS Compatibility
-
-Anything that can install .NET 8 should be able to run YMouseButtonControl
-
-[.NET 8 Supported OS](https://github.com/dotnet/core/blob/main/release-notes/8.0/supported-os.md)
-
-| **Operating System** | **Version** |
-|----------------------|-------------|
-| Windows 10           | 1607+       |
-| Windows 11           | 22000+      |
-| Ubuntu               | 20.04+      |
-| macOS                | 12.0+       |
-
-### Linux X11 vs. Wayland Considerations
-
-* X11 is preferred when running this software: [More information](https://github.com/FaithBeam/YMouseButtonControl/wiki/Linux-X11-vs-Wayland-Considerations)
-
-### Linux Issues
-
-* [Linux Issues](https://github.com/FaithBeam/YMouseButtonControl/wiki/Linux-Issues)
-
-## Build
-
-### Requirements
-
-* [.NET SDK 8.0](https://dotnet.microsoft.com/en-us/download/visual-studio-sdks)
-
-### Build Commands
-
-1. `git clone https://github.com/FaithBeam/YMouseButtonControl`
-2. `cd YMouseButtonControl`
-3. ```
-   dotnet publish YMouseButtonControl/YMouseButtonControl.csproj \
-       -c Release \
-       -r YOUR_PLATFORM \
-       -o bin \
-       --self-contained true \
-       /p:PublishSingleFile=true \
-       /p:IncludeNativeLibrariesForSelfExtract=true \
-       /p:EnableCompressionInSingleFile=true
-
-   ```
-    * YOUR_PLATFORM: win-x64, linux-x64, osx-x64, [more runtimes here](https://learn.microsoft.com/en-us/dotnet/core/rid-catalog)
-4. YMouseButtonControl executable is located in bin folder
-
-### Helper script
-
-`scripts/build-release.sh` builds self-contained, single-file releases and strips files that
-aren't needed to run (debug symbols, `LICENSE`):
-
+#### Building the Rust Core Daemon
+```bash
+cd RMouseButtonControl
+cargo build --release
 ```
-scripts/build-release.sh                 # win-x64, linux-x64, osx-x64
-scripts/build-release.sh linux-x64       # a single runtime
-scripts/build-release.sh win-x64 osx-arm64
+The daemon binary will be produced in `target/release/rmousebuttoncontrol`.
+
+#### Building the Qt6 Native GUI
+```bash
+cmake -B build -S gui -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j $(nproc)
+```
+The GUI binary will be produced in `build/rmouse-gui`.
+
+#### Running
+```bash
+# Start background daemon
+./rmousebuttoncontrol &
+
+# Open settings GUI
+./rmouse-gui
 ```
 
-Output goes to `bin/publish-<rid>/`. Each folder contains the executable plus `appsettings.json`
-(required at startup); the macOS build additionally ships the native `.dylib` files it needs.
+---
 
-## Troubleshooting
+<a name="русский"></a>
+## Русский
 
-Having a problem (profiles not saving, Wayland limitations, per-app profiles, more than 5
-buttons)? See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+**RMouseButtonControl** — высокопроизводительная утилита для переназначения кнопок мыши и симуляции макросов. Проект сочетает фоновый сервис на чистом безопасном Rust, быстрый нативный интерфейс на Qt6 по умолчанию и возможность запуска оригинального Fluent Avalonia C# интерфейса.
 
-## Contributing
+### Ключевые возможности и архитектура
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for build/test instructions and
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for a tour of the codebase.
+- **Ядро на чистом Rust:**
+  - Написано с `#![forbid(unsafe_code)]` — математическая гарантия отсутствия утечек памяти и сбоев.
+  - Прямой драйвер виртуального устройства ядра Linux `/dev/uinput` — субмиллисекундный инпут-лаг, полная совместимость с Wayland, X11 и играми с античитом.
+  - Userspace fallback для сред с ограниченным доступом к `/dev/uinput`.
+  - Потребление ОЗУ демона — всего ~10 МБ.
+- **Два интерфейса на выбор:**
+  - **Qt6 нативный GUI (По умолчанию):** Мгновенный запуск (<20 мс), малое потребление памяти (~20 МБ), современное оформление.
+  - **Avalonia C# GUI (Опционально):** Оригинальный интерфейс в стиле Fluent.
+  - Переключение между интерфейсами доступно в один клик через контекстное меню трея или окно общих настроек.
+- **Интеграция с рабочим столом и системным треем:**
+  - Стандартное меню StatusNotifierItem для системного трея KDE Plasma, GNOME и FreeDesktop.
+  - Быстрое переключение профилей, пауза/возобновление, управление автозапуском и горячая перезагрузка базы.
+- **7 режимов симуляции макросов:**
+  1. При нажатии кнопки мыши
+  2. При отпускании кнопки мыши
+  3. В течение (нажатие при опускании, отпускание при подъёме)
+  4. В отдельном потоке при нажатии
+  5. В отдельном потоке при отпускании
+  6. Повторение при удержании кнопки (с настраиваемой задержкой в мс и 10% случайным джиттером)
+  7. Залипание (удержание или повтор до повторного нажатия)
+- **Автоматическое распознавание окон и процессов:**
+  - Переключение профилей по активному окну.
+  - Полная поддержка нативных приложений Linux, а также игр под Wine и Proton.
+- **5 тем оформления:**
+  - Системная (KDE Plasma / Breeze)
+  - Тёмная (Modern Dark)
+  - Светлая (Clean White)
+  - Чёрная (AMOLED Black `#000000`)
+  - Fusion
+- **Локализация:**
+  - Поддержка 8 языков: русский, английский, немецкий, испанский, французский, украинский, португальский и китайский.
+
+### Сборка и запуск
+
+#### Зависимости
+- **Linux:** `cargo`, `rustc`, `cmake`, `g++`, `qt6-base-dev`
+- **Опционально (для C# GUI):** `.NET 8.0 SDK`
+
+#### Сборка Rust ядра
+```bash
+cd RMouseButtonControl
+cargo build --release
+```
+Бинарный файл: `target/release/rmousebuttoncontrol`.
+
+#### Сборка Qt6 интерфейса
+```bash
+cmake -B build -S gui -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j $(nproc)
+```
+Бинарный файл: `build/rmouse-gui`.
+
+#### Запуск
+```bash
+# Запуск фонового сервиса
+./rmousebuttoncontrol &
+
+# Запуск интерфейса настроек
+./rmouse-gui
+```

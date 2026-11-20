@@ -17,7 +17,7 @@
         <globalSettingsDialog:GlobalSettingsDialogViewModel />
     </Design.DataContext>
 
-    <Grid Margin="6" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*">
+    <Grid Margin="6" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*">
         <CheckBox Grid.Row="0"
                   Content="{i18n:Tr Set_StartMinimized}"
                   IsChecked="{Binding StartMinimized.Value}" />
@@ -55,7 +55,20 @@
                 </ComboBox.ItemTemplate>
             </ComboBox>
         </StackPanel>
-        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+        <StackPanel Grid.Row="5" Margin="0,4,0,0">
+            <Label Content="Интерфейс по умолчанию / Default GUI" />
+            <ComboBox ItemsSource="{Binding GuiCollection}"
+                      SelectedItem="{Binding SelectedGui}"
+                      HorizontalAlignment="Stretch">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Margin="0,4,0,0" Content="Открыть Qt интерфейс / Open Qt GUI" Command="{Binding OpenQtGuiCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" />
+        </StackPanel>
+        <StackPanel Grid.Row="6" Margin="0,8,0,0" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
             <Button Content="{i18n:Tr Btn_Apply}" Command="{Binding ApplyCommand}" />
             <Button Content="{i18n:Tr Btn_Cancel}" Click="Cancel_OnClick" />
         </StackPanel>
