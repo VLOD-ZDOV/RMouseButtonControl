@@ -18,6 +18,9 @@ x11rb = { version = "0.14", default-features = false, features = ["extra-traits"
 evdev = "0.13"
 ksni = { version = "0.3.7", features = ["blocking"] }
 
+[target.'cfg(windows)'.build-dependencies]
+winres = "0.1"
+
 [dev-dependencies]
 
 [profile.release]

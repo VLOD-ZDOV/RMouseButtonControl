@@ -8,6 +8,10 @@
 #include <QLineEdit>
 #include <QLabel>
 #include <QVector>
+#include <QSystemTrayIcon>
+#include <QMenu>
+#include <QAction>
+#include <QCloseEvent>
 #include "Database.h"
 
 class MainWindow : public QMainWindow {
@@ -15,6 +19,9 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
     void onProfileSelected(int index);
@@ -39,6 +46,14 @@ private:
     void displayCurrentProfile();
     void applyTheme(int themeIndex);
     void setDirty(bool dirty);
+    void setupTray();
+    void updateTrayTranslations();
+
+    QSystemTrayIcon* m_trayIcon = nullptr;
+    QMenu* m_trayMenu = nullptr;
+    QAction* m_traySetupAction = nullptr;
+    QAction* m_trayExitAction = nullptr;
+    bool m_forceQuit = false;
 
     QVector<ProfileModel> m_profiles;
     int m_currentProfileIndex = 0;

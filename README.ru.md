@@ -54,6 +54,9 @@ winget install --manifest winget/VLOD-ZDOV.RMouseButtonControl.yaml
 - **Установщик Setup (`.exe`)**: [RMouseButtonControl-Windows-Setup.exe](https://github.com/VLOD-ZDOV/RMouseButtonControl/releases/latest/download/RMouseButtonControl-Windows-Setup.exe) (установка в 1 клик, ярлыки в меню «Пуск», автозапуск).
 - **Портативная версия Portable (`.zip`)**: [RMouseButtonControl-Windows-Portable.zip](https://github.com/VLOD-ZDOV/RMouseButtonControl/releases/latest/download/RMouseButtonControl-Windows-Portable.zip) (работает без установки).
 
+> **Примечание:**
+> - При закрытии окна настроек программа сворачивается и уходит в системный трей (продолжает работать в фоне). Полный выход доступен через контекстное меню трея.
+
 ## Сборка и запуск
 
 ### Зависимости

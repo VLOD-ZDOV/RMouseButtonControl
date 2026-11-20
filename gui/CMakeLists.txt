@@ -39,6 +39,7 @@ add_executable(rmouse-gui ${SOURCES})
 
 if(WIN32)
     set_target_properties(rmouse-gui PROPERTIES WIN32_EXECUTABLE TRUE)
+    target_sources(rmouse-gui PRIVATE resources/app.rc)
 endif()
 
 target_link_libraries(rmouse-gui PRIVATE

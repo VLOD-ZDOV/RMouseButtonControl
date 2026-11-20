@@ -25,9 +25,14 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setupUi();
     loadData();
+    setupTray();
 }
 
-MainWindow::~MainWindow() = default;
+MainWindow::~MainWindow() {
+    if (m_trayIcon) {
+        m_trayIcon->hide();
+    }
+}
 
 void MainWindow::setupUi() {
     setWindowTitle("RMouseButtonControl");
@@ -620,6 +625,7 @@ void MainWindow::onOpenSettings() {
         applyTheme(m_settings.theme);
 
         Localization::instance().setLanguage(m_settings.language);
+        updateTrayTranslations();
     }
 }
 
@@ -976,5 +982,66 @@ void MainWindow::applyTheme(int themeIndex) {
             qApp->setPalette(qApp->style()->standardPalette());
             break;
         }
+    }
+}
+
+void MainWindow::setupTray() {
+    if (!QSystemTrayIcon::isSystemTrayAvailable()) {
+        return;
+    }
+
+    m_trayIcon = new QSystemTrayIcon(QIcon(":/mouse.png"), this);
+    m_trayIcon->setToolTip("RMouseButtonControl");
+
+    m_trayMenu = new QMenu(this);
+
+    m_traySetupAction = m_trayMenu->addAction(QIcon(":/mouse.png"), Tr("Tray_Setup"));
+    connect(m_traySetupAction, &QAction::triggered, this, [this]() {
+        showNormal();
+        activateWindow();
+        raise();
+    });
+
+    m_trayMenu->addSeparator();
+
+    m_trayExitAction = m_trayMenu->addAction(Tr("Tray_Exit"));
+    connect(m_trayExitAction, &QAction::triggered, this, [this]() {
+        m_forceQuit = true;
+        close();
+        QApplication::quit();
+    });
+
+    m_trayIcon->setContextMenu(m_trayMenu);
+
+    connect(m_trayIcon, &QSystemTrayIcon::activated, this, [this](QSystemTrayIcon::ActivationReason reason) {
+        if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick) {
+            if (isVisible() && !isMinimized()) {
+                hide();
+            } else {
+                showNormal();
+                activateWindow();
+                raise();
+            }
+        }
+    });
+
+    m_trayIcon->show();
+}
+
+void MainWindow::updateTrayTranslations() {
+    if (m_traySetupAction) {
+        m_traySetupAction->setText(Tr("Tray_Setup"));
+    }
+    if (m_trayExitAction) {
+        m_trayExitAction->setText(Tr("Tray_Exit"));
+    }
+}
+
+void MainWindow::closeEvent(QCloseEvent *event) {
+    if (m_forceQuit || !m_trayIcon || !m_trayIcon->isVisible()) {
+        event->accept();
+    } else {
+        hide();
+        event->ignore();
     }
 }

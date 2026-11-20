@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>mouse.ico</file>
+        <file>mouse.png</file>
         <file>gear_icon1.png</file>
         <file>crosshair.png</file>
         <file>translations.json</file>
