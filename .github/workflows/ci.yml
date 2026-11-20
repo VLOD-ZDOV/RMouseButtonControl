@@ -51,6 +51,8 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build Windows daemon binary
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
         run: cargo build --manifest-path RMouseButtonControl/Cargo.toml --release
 
       - name: Upload Windows daemon artifact
@@ -108,6 +110,27 @@ jobs:
           cmake -B build-win -S gui -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build build-win
           windeployqt-qt6 build-win/rmouse-gui.exe --no-translations --compiler-runtime || windeployqt build-win/rmouse-gui.exe --no-translations --compiler-runtime
+
+          # Ensure essential C/C++ runtime DLLs are present
+          for dll in libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll; do
+            if [ -f "/ucrt64/bin/$dll" ]; then
+              cp -u "/ucrt64/bin/$dll" build-win/
+            fi
+          done
+
+          # Recursively bundle all non-Qt runtime DLLs required by rmouse-gui.exe and plugins
+          for round in 1 2 3 4; do
+            for bin in build-win/*.exe build-win/*.dll build-win/*/*.dll; do
+              if [ -f "$bin" ]; then
+                for dep in $(ldd "$bin" 2>/dev/null | tr -d '\r' | grep -i '/ucrt64/bin/' | awk '{for(i=1;i<=NF;i++) if($i ~ /^\/ucrt64\/bin\//) print $i}'); do
+                  if [ -f "$dep" ] && [ ! -f "build-win/$(basename "$dep")" ]; then
+                    cp "$dep" build-win/
+                    echo "Bundled DLL: $(basename "$dep")"
+                  fi
+                done
+              fi
+            done
+          done
 
       - name: Upload Qt GUI Windows artifact
         uses: actions/upload-artifact@v4
