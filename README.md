@@ -1,15 +1,12 @@
 # RMouseButtonControl
 
-[English](#english) | [Русский](#русский)
+[Русская версия / Russian version](README.ru.md)
 
----
-
-<a name="english"></a>
-## English
+![RMouseButtonControl](https://github.com/user-attachments/assets/a42266b8-dead-4dfd-b894-2deba1e9aa7e)
 
 **RMouseButtonControl** is a high-performance mouse remapping and macro automation utility. It combines a pure safe Rust background daemon with a fast native Qt6 graphical interface and an optional Fluent Avalonia C# interface.
 
-### Highlights & Architecture
+## Highlights & Architecture
 
 - **High-Performance Rust Core Engine:**
   - Written with `#![forbid(unsafe_code)]` for guaranteed memory safety and stability.
@@ -43,101 +40,31 @@
 - **Multi-language Support:**
   - Localized into 8 languages: English, Russian, German, Spanish, French, Ukrainian, Portuguese, and Simplified Chinese.
 
-### Installation & Build
+## Installation & Build
 
-#### Prerequisites
+### Prerequisites
 - **Linux:** `cargo`, `rustc`, `cmake`, `g++`, `qt6-base-dev`
 - **Optional (for C# GUI):** `.NET 8.0 SDK`
 
-#### Building the Rust Core Daemon
+### Building the Rust Core Daemon
 ```bash
 cd RMouseButtonControl
 cargo build --release
 ```
 The daemon binary will be produced in `target/release/rmousebuttoncontrol`.
 
-#### Building the Qt6 Native GUI
+### Building the Qt6 Native GUI
 ```bash
 cmake -B build -S gui -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j $(nproc)
 ```
 The GUI binary will be produced in `build/rmouse-gui`.
 
-#### Running
+### Running
 ```bash
 # Start background daemon
 ./rmousebuttoncontrol &
 
 # Open settings GUI
-./rmouse-gui
-```
-
----
-
-<a name="русский"></a>
-## Русский
-
-**RMouseButtonControl** — высокопроизводительная утилита для переназначения кнопок мыши и симуляции макросов. Проект сочетает фоновый сервис на чистом безопасном Rust, быстрый нативный интерфейс на Qt6 по умолчанию и возможность запуска оригинального Fluent Avalonia C# интерфейса.
-
-### Ключевые возможности и архитектура
-
-- **Ядро на чистом Rust:**
-  - Написано с `#![forbid(unsafe_code)]` — математическая гарантия отсутствия утечек памяти и сбоев.
-  - Прямой драйвер виртуального устройства ядра Linux `/dev/uinput` — субмиллисекундный инпут-лаг, полная совместимость с Wayland, X11 и играми с античитом.
-  - Userspace fallback для сред с ограниченным доступом к `/dev/uinput`.
-  - Потребление ОЗУ демона — всего ~10 МБ.
-- **Два интерфейса на выбор:**
-  - **Qt6 нативный GUI (По умолчанию):** Мгновенный запуск (<20 мс), малое потребление памяти (~20 МБ), современное оформление.
-  - **Avalonia C# GUI (Опционально):** Оригинальный интерфейс в стиле Fluent.
-  - Переключение между интерфейсами доступно в один клик через контекстное меню трея или окно общих настроек.
-- **Интеграция с рабочим столом и системным треем:**
-  - Стандартное меню StatusNotifierItem для системного трея KDE Plasma, GNOME и FreeDesktop.
-  - Быстрое переключение профилей, пауза/возобновление, управление автозапуском и горячая перезагрузка базы.
-- **7 режимов симуляции макросов:**
-  1. При нажатии кнопки мыши
-  2. При отпускании кнопки мыши
-  3. В течение (нажатие при опускании, отпускание при подъёме)
-  4. В отдельном потоке при нажатии
-  5. В отдельном потоке при отпускании
-  6. Повторение при удержании кнопки (с настраиваемой задержкой в мс и 10% случайным джиттером)
-  7. Залипание (удержание или повтор до повторного нажатия)
-- **Автоматическое распознавание окон и процессов:**
-  - Переключение профилей по активному окну.
-  - Полная поддержка нативных приложений Linux, а также игр под Wine и Proton.
-- **5 тем оформления:**
-  - Системная (KDE Plasma / Breeze)
-  - Тёмная (Modern Dark)
-  - Светлая (Clean White)
-  - Чёрная (AMOLED Black `#000000`)
-  - Fusion
-- **Локализация:**
-  - Поддержка 8 языков: русский, английский, немецкий, испанский, французский, украинский, португальский и китайский.
-
-### Сборка и запуск
-
-#### Зависимости
-- **Linux:** `cargo`, `rustc`, `cmake`, `g++`, `qt6-base-dev`
-- **Опционально (для C# GUI):** `.NET 8.0 SDK`
-
-#### Сборка Rust ядра
-```bash
-cd RMouseButtonControl
-cargo build --release
-```
-Бинарный файл: `target/release/rmousebuttoncontrol`.
-
-#### Сборка Qt6 интерфейса
-```bash
-cmake -B build -S gui -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j $(nproc)
-```
-Бинарный файл: `build/rmouse-gui`.
-
-#### Запуск
-```bash
-# Запуск фонового сервиса
-./rmousebuttoncontrol &
-
-# Запуск интерфейса настроек
 ./rmouse-gui
 ```
