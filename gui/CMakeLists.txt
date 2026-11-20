@@ -8,11 +8,12 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE ON)
 
 if(NOT MSVC)
-    add_compile_options("$<$<CONFIG:Release>:-O3>")
-    add_link_options("$<$<CONFIG:Release>:-s>")
+    add_compile_options("$<$<CONFIG:Release>:-O3;-fPIE>")
+    add_link_options("$<$<CONFIG:Release>:-pie;-s>")
 endif()
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Sql)
