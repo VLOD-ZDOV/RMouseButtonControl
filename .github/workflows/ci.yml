@@ -179,8 +179,9 @@ jobs:
           }
           iscc scripts\installer.iss
 
-          # 3. Create Windows Portable: dist\RMouseButtonControl-Windows-Portable.zip
+          # 3. Create Windows Portable: dist\RMouseButtonControl-Windows-Portable.zip & dist\RMouseButtonControl-Windows-Qt.zip
           Compress-Archive -Path bundle-win-qt\* -DestinationPath dist\RMouseButtonControl-Windows-Portable.zip -Force
+          Copy-Item dist\RMouseButtonControl-Windows-Portable.zip dist\RMouseButtonControl-Windows-Qt.zip -Force
 
           # 4. Create Windows Full: dist\RMouseButtonControl-Windows-Full.zip
           New-Item -ItemType Directory -Path bundle-win-full -Force
