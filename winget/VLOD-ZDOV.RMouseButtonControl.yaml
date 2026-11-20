@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=https://aka.ms/winget-manifest.singleton.1.6.0.schema.json
+PackageIdentifier: VLOD-ZDOV.RMouseButtonControl
+PackageVersion: 0.29.0
+PackageName: RMouseButtonControl
+Publisher: VLOD-ZDOV
+Moniker: rmouse
+License: GPL-3.0
+LicenseUrl: https://raw.githubusercontent.com/VLOD-ZDOV/RMouseButtonControl/master/LICENSE
+ShortDescription: High-performance mouse remapping and macro automation utility (Rust + Qt6)
+Description: RMouseButtonControl is a high-performance mouse remapping and macro automation utility combining a safe Rust daemon with a native Qt6 GUI.
+PackageUrl: https://github.com/VLOD-ZDOV/RMouseButtonControl
+Installers:
+  - Architecture: x64
+    InstallerType: inno
+    InstallerUrl: https://github.com/VLOD-ZDOV/RMouseButtonControl/releases/download/0.29.0/RMouseButtonControl-Windows-Setup.exe
+    Scope: machine
+    InstallerSwitches:
+      Silent: /VERYSILENT /NORESTART /SUPPRESSMSGBOXES
+      SilentWithProgress: /SILENT /NORESTART /SUPPRESSMSGBOXES
+ManifestType: singleton
+ManifestVersion: 1.6.0

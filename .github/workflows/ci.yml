@@ -142,9 +142,9 @@ jobs:
           path: publish/win-x64/
 
   release-packages:
-    name: Package 4 Release Bundles
+    name: Package Release Bundles & Setup
     needs: [rust-core, qt-gui, qt-gui-windows, avalonia-gui]
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -154,47 +154,59 @@ jobs:
         with:
           path: artifacts
 
-      - name: Package 4 Release Bundles
+      - name: Build Windows Setup and Package Archives
+        shell: pwsh
         run: |
-          mkdir -p release-output
+          New-Item -ItemType Directory -Path dist -Force
 
-          # 1. Linux Qt (Rust + Qt)
-          mkdir -p pkg-lin-qt
-          cp artifacts/rmousebuttoncontrol-linux-x64/rmousebuttoncontrol pkg-lin-qt/
-          cp artifacts/rmouse-gui-linux-x64/rmouse-gui pkg-lin-qt/
-          cp README.md README.ru.md pkg-lin-qt/
-          chmod +x pkg-lin-qt/rmousebuttoncontrol pkg-lin-qt/rmouse-gui
-          tar -czf release-output/RMouseButtonControl-Linux-Qt.tar.gz -C pkg-lin-qt .
+          # 1. Prepare bundle-win-qt (Clean portable Windows bundle)
+          New-Item -ItemType Directory -Path bundle-win-qt -Force
+          Copy-Item artifacts\rmousebuttoncontrol-windows-x64\rmousebuttoncontrol.exe bundle-win-qt\
+          Copy-Item artifacts\rmouse-gui-windows-x64\* bundle-win-qt\ -Recurse
+          Copy-Item README.md, README.ru.md bundle-win-qt\
 
-          # 2. Linux Full (Rust + Qt + C# Avalonia)
-          mkdir -p pkg-lin-full
-          cp artifacts/rmousebuttoncontrol-linux-x64/rmousebuttoncontrol pkg-lin-full/
-          cp artifacts/rmouse-gui-linux-x64/rmouse-gui pkg-lin-full/
-          mkdir -p pkg-lin-full/csharp-gui
-          cp -r artifacts/rmouse-avalonia-gui-linux-x64/* pkg-lin-full/csharp-gui/
-          cp README.md README.ru.md pkg-lin-full/
-          chmod +x pkg-lin-full/rmousebuttoncontrol pkg-lin-full/rmouse-gui pkg-lin-full/csharp-gui/YMouseButtonControl
-          tar -czf release-output/RMouseButtonControl-Linux-Full.tar.gz -C pkg-lin-full .
+          # Remove temporary CMake build files from Windows package
+          Remove-Item -Path bundle-win-qt\CMakeFiles, bundle-win-qt\rmouse-gui_autogen -Recurse -Force -ErrorAction SilentlyContinue
+          Remove-Item -Path bundle-win-qt\CMakeCache.txt, bundle-win-qt\cmake_install.cmake, bundle-win-qt\build.ninja, bundle-win-qt\.ninja_* -Force -ErrorAction SilentlyContinue
 
-          # 3. Windows Qt (Rust + Qt)
-          sudo apt-get install -y zip
-          mkdir -p pkg-win-qt
-          cp artifacts/rmousebuttoncontrol-windows-x64/rmousebuttoncontrol.exe pkg-win-qt/
-          cp -r artifacts/rmouse-gui-windows-x64/* pkg-win-qt/
-          cp README.md README.ru.md pkg-win-qt/
-          (cd pkg-win-qt && zip -r ../release-output/RMouseButtonControl-Windows-Qt.zip .)
+          # 2. Build Inno Setup Installer: dist\RMouseButtonControl-Windows-Setup.exe
+          if (!(Get-Command iscc -ErrorAction SilentlyContinue)) {
+            $isccPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+            if (!(Test-Path $isccPath)) {
+              choco install innosetup --no-progress -y
+            }
+            $env:PATH += ";C:\Program Files (x86)\Inno Setup 6"
+          }
+          iscc scripts\installer.iss
 
-          # 4. Windows Full (Rust + Qt + C# Avalonia)
-          mkdir -p pkg-win-full
-          cp artifacts/rmousebuttoncontrol-windows-x64/rmousebuttoncontrol.exe pkg-win-full/
-          cp -r artifacts/rmouse-gui-windows-x64/* pkg-win-full/
-          mkdir -p pkg-win-full/csharp-gui
-          cp -r artifacts/rmouse-avalonia-gui-win-x64/* pkg-win-full/csharp-gui/
-          cp README.md README.ru.md pkg-win-full/
-          (cd pkg-win-full && zip -r ../release-output/RMouseButtonControl-Windows-Full.zip .)
+          # 3. Create Windows Portable: dist\RMouseButtonControl-Windows-Portable.zip
+          Compress-Archive -Path bundle-win-qt\* -DestinationPath dist\RMouseButtonControl-Windows-Portable.zip -Force
+
+          # 4. Create Windows Full: dist\RMouseButtonControl-Windows-Full.zip
+          New-Item -ItemType Directory -Path bundle-win-full -Force
+          Copy-Item bundle-win-qt\* bundle-win-full\ -Recurse
+          New-Item -ItemType Directory -Path bundle-win-full\csharp-gui -Force
+          Copy-Item artifacts\rmouse-avalonia-gui-win-x64\* bundle-win-full\csharp-gui\ -Recurse
+          Compress-Archive -Path bundle-win-full\* -DestinationPath dist\RMouseButtonControl-Windows-Full.zip -Force
+
+          # 5. Create Linux Qt package: dist\RMouseButtonControl-Linux-Qt.tar.gz
+          New-Item -ItemType Directory -Path bundle-lin-qt -Force
+          Copy-Item artifacts\rmousebuttoncontrol-linux-x64\rmousebuttoncontrol bundle-lin-qt\
+          Copy-Item artifacts\rmouse-gui-linux-x64\rmouse-gui bundle-lin-qt\
+          Copy-Item README.md, README.ru.md bundle-lin-qt\
+          tar -czf dist/RMouseButtonControl-Linux-Qt.tar.gz -C bundle-lin-qt .
+
+          # 6. Create Linux Full package: dist\RMouseButtonControl-Linux-Full.tar.gz
+          New-Item -ItemType Directory -Path bundle-lin-full -Force
+          Copy-Item artifacts\rmousebuttoncontrol-linux-x64\rmousebuttoncontrol bundle-lin-full\
+          Copy-Item artifacts\rmouse-gui-linux-x64\rmouse-gui bundle-lin-full\
+          New-Item -ItemType Directory -Path bundle-lin-full\csharp-gui -Force
+          Copy-Item artifacts\rmouse-avalonia-gui-linux-x64\* bundle-lin-full\csharp-gui\ -Recurse
+          Copy-Item README.md, README.ru.md bundle-lin-full\
+          tar -czf dist/RMouseButtonControl-Linux-Full.tar.gz -C bundle-lin-full .
 
       - name: Upload Release Bundles Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: release-bundles-4
-          path: release-output/*
+          name: release-bundles-all
+          path: dist/*

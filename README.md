@@ -33,6 +33,27 @@
 - **Multi-language Support:**
   - Localized into 8 languages: English, Russian, German, Spanish, French, Ukrainian, Portuguese, and Simplified Chinese.
 
+## Quick Install
+
+### Linux (curl)
+```bash
+curl -sSL https://raw.githubusercontent.com/VLOD-ZDOV/RMouseButtonControl/master/scripts/install.sh | bash
+```
+
+### Windows (PowerShell)
+```powershell
+irm https://raw.githubusercontent.com/VLOD-ZDOV/RMouseButtonControl/master/scripts/install.ps1 | iex
+```
+
+### Windows (winget)
+```powershell
+winget install --manifest winget/VLOD-ZDOV.RMouseButtonControl.yaml
+```
+
+### Windows Packages
+- **Setup Installer (`.exe`)**: [RMouseButtonControl-Windows-Setup.exe](https://github.com/VLOD-ZDOV/RMouseButtonControl/releases/latest/download/RMouseButtonControl-Windows-Setup.exe) (1-click wizard, Start Menu shortcuts, autostart).
+- **Portable (`.zip`)**: [RMouseButtonControl-Windows-Portable.zip](https://github.com/VLOD-ZDOV/RMouseButtonControl/releases/latest/download/RMouseButtonControl-Windows-Portable.zip) (run without installation).
+
 ## Installation & Build
 
 ### Prerequisites
