@@ -3,7 +3,7 @@ name: CI & Release Build
 on:
   push:
     branches: [ "master" ]
-    tags: [ "v*" ]
+    tags: [ "v*", "[0-9]*" ]
   pull_request:
     branches: [ "master" ]
   workflow_dispatch:
@@ -48,7 +48,7 @@ jobs:
           path: RMouseButtonControl/target/x86_64-pc-windows-gnu/release/rmousebuttoncontrol.exe
 
   qt-gui:
-    name: Build Qt6 Native GUI
+    name: Build Qt6 Native GUI (Linux)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -64,11 +64,42 @@ jobs:
           cmake -B build -S gui -DCMAKE_BUILD_TYPE=Release
           cmake --build build -j $(nproc)
 
-      - name: Upload Qt GUI artifact
+      - name: Upload Qt GUI Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: rmouse-gui-linux-x64
           path: build/rmouse-gui
+
+  qt-gui-windows:
+    name: Build Qt6 Native GUI (Windows)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: false
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-qt6-base
+
+      - name: Build Qt GUI (Windows)
+        shell: msys2 {0}
+        run: |
+          cmake -B build-win -S gui -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-win
+          windeployqt-qt6 build-win/rmouse-gui.exe --no-translations --compiler-runtime || windeployqt build-win/rmouse-gui.exe --no-translations --compiler-runtime
+
+      - name: Upload Qt GUI Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rmouse-gui-windows-x64
+          path: build-win/
 
   avalonia-gui:
     name: Build C# Avalonia GUI
@@ -109,3 +140,61 @@ jobs:
         with:
           name: rmouse-avalonia-gui-win-x64
           path: publish/win-x64/
+
+  release-packages:
+    name: Package 4 Release Bundles
+    needs: [rust-core, qt-gui, qt-gui-windows, avalonia-gui]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Package 4 Release Bundles
+        run: |
+          mkdir -p release-output
+
+          # 1. Linux Qt (Rust + Qt)
+          mkdir -p pkg-lin-qt
+          cp artifacts/rmousebuttoncontrol-linux-x64/rmousebuttoncontrol pkg-lin-qt/
+          cp artifacts/rmouse-gui-linux-x64/rmouse-gui pkg-lin-qt/
+          cp README.md README.ru.md pkg-lin-qt/
+          chmod +x pkg-lin-qt/rmousebuttoncontrol pkg-lin-qt/rmouse-gui
+          tar -czf release-output/RMouseButtonControl-Linux-Qt.tar.gz -C pkg-lin-qt .
+
+          # 2. Linux Full (Rust + Qt + C# Avalonia)
+          mkdir -p pkg-lin-full
+          cp artifacts/rmousebuttoncontrol-linux-x64/rmousebuttoncontrol pkg-lin-full/
+          cp artifacts/rmouse-gui-linux-x64/rmouse-gui pkg-lin-full/
+          mkdir -p pkg-lin-full/csharp-gui
+          cp -r artifacts/rmouse-avalonia-gui-linux-x64/* pkg-lin-full/csharp-gui/
+          cp README.md README.ru.md pkg-lin-full/
+          chmod +x pkg-lin-full/rmousebuttoncontrol pkg-lin-full/rmouse-gui pkg-lin-full/csharp-gui/YMouseButtonControl
+          tar -czf release-output/RMouseButtonControl-Linux-Full.tar.gz -C pkg-lin-full .
+
+          # 3. Windows Qt (Rust + Qt)
+          sudo apt-get install -y zip
+          mkdir -p pkg-win-qt
+          cp artifacts/rmousebuttoncontrol-windows-x64/rmousebuttoncontrol.exe pkg-win-qt/
+          cp -r artifacts/rmouse-gui-windows-x64/* pkg-win-qt/
+          cp README.md README.ru.md pkg-win-qt/
+          (cd pkg-win-qt && zip -r ../release-output/RMouseButtonControl-Windows-Qt.zip .)
+
+          # 4. Windows Full (Rust + Qt + C# Avalonia)
+          mkdir -p pkg-win-full
+          cp artifacts/rmousebuttoncontrol-windows-x64/rmousebuttoncontrol.exe pkg-win-full/
+          cp -r artifacts/rmouse-gui-windows-x64/* pkg-win-full/
+          mkdir -p pkg-win-full/csharp-gui
+          cp -r artifacts/rmouse-avalonia-gui-win-x64/* pkg-win-full/csharp-gui/
+          cp README.md README.ru.md pkg-win-full/
+          (cd pkg-win-full && zip -r ../release-output/RMouseButtonControl-Windows-Full.zip .)
+
+      - name: Upload Release Bundles Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-bundles-4
+          path: release-output/*

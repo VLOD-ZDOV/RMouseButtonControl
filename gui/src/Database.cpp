@@ -56,11 +56,20 @@ Database::Database() {
 }
 
 QString Database::defaultDbPath() {
+#ifdef Q_OS_WIN
+    QString appData = QDir::homePath() + "/AppData/Roaming";
+    QString newPath = appData + "/RMouseButtonControl/RMouseButtonControl.db";
+    if (QFile::exists(newPath)) return newPath;
+    QString oldPath = appData + "/YMouseButtonControl/YMouseButtonControl.db";
+    if (QFile::exists(oldPath)) return oldPath;
+    return newPath;
+#else
     QString newPath = QDir::homePath() + "/.config/RMouseButtonControl/RMouseButtonControl.db";
     if (QFile::exists(newPath)) return newPath;
     QString oldPath = QDir::homePath() + "/.config/YMouseButtonControl/YMouseButtonControl.db";
     if (QFile::exists(oldPath)) return oldPath;
     return newPath;
+#endif
 }
 
 bool Database::open() {

@@ -11,7 +11,11 @@
 #include <QIcon>
 
 static QString autostartPath() {
+#ifdef Q_OS_WIN
+    return QDir::homePath() + "/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup/RMouseButtonControl.lnk";
+#else
     return QDir::homePath() + "/.config/autostart/RMouseButtonControl.desktop";
+#endif
 }
 
 static bool isAutostartEnabled() {

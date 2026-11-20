@@ -10,7 +10,12 @@
 #include <QLabel>
 #include <QIcon>
 #include <QSet>
+#ifdef Q_OS_WIN
+#include <windows.h>
+#include <tlhelp32.h>
+#else
 #include <unistd.h>
+#endif
 
 ProcessSelectorDialog::ProcessSelectorDialog(QWidget *parent)
     : QDialog(parent)
@@ -113,11 +118,33 @@ void ProcessSelectorDialog::setupUi() {
 void ProcessSelectorDialog::refreshProcessList() {
     m_table->setRowCount(0);
 
-    QDir procDir("/proc");
-    QStringList pids = procDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
-
     QSet<QString> seen;
     int row = 0;
+
+#ifdef Q_OS_WIN
+    HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnap != INVALID_HANDLE_VALUE) {
+        PROCESSENTRY32W pe;
+        pe.dwSize = sizeof(pe);
+        if (Process32FirstW(hSnap, &pe)) {
+            do {
+                QString procName = QString::fromWCharArray(pe.szExeFile);
+                if (procName.isEmpty() || seen.contains(procName)) continue;
+                seen.insert(procName);
+
+                m_table->insertRow(row);
+                m_table->setItem(row, 0, new QTableWidgetItem(procName));
+                m_table->setItem(row, 1, new QTableWidgetItem(procName));
+                m_table->setItem(row, 2, new QTableWidgetItem(""));
+                m_table->setItem(row, 3, new QTableWidgetItem(procName));
+                row++;
+            } while (Process32NextW(hSnap, &pe));
+        }
+        CloseHandle(hSnap);
+    }
+#else
+    QDir procDir("/proc");
+    QStringList pids = procDir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
 
     for (const QString& pidStr : pids) {
         bool ok = false;
@@ -163,6 +190,7 @@ void ProcessSelectorDialog::refreshProcessList() {
         m_table->setItem(row, 3, new QTableWidgetItem(exePath));
         row++;
     }
+#endif
 
     m_table->sortItems(0, Qt::AscendingOrder);
 }

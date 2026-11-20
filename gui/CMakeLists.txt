@@ -29,6 +29,10 @@ set(SOURCES
 
 add_executable(rmouse-gui ${SOURCES})
 
+if(WIN32)
+    set_target_properties(rmouse-gui PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
+
 target_link_libraries(rmouse-gui PRIVATE
     Qt6::Core
     Qt6::Gui
