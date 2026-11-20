@@ -256,14 +256,21 @@ public partial class App : Application
     /// </summary>
     private static string GetUserDataDirectory()
     {
-        var directory = Path.Combine(
-            Environment.GetFolderPath(
-                Environment.SpecialFolder.ApplicationData,
-                Environment.SpecialFolderOption.Create
-            ),
-            "YMouseButtonControl"
+        var appData = Environment.GetFolderPath(
+            Environment.SpecialFolder.ApplicationData,
+            Environment.SpecialFolderOption.Create
         );
-        Directory.CreateDirectory(directory);
-        return directory;
+        var rmouseDir = Path.Combine(appData, "RMouseButtonControl");
+        if (File.Exists(Path.Combine(rmouseDir, "RMouseButtonControl.db")))
+        {
+            return rmouseDir;
+        }
+        var ymouseDir = Path.Combine(appData, "YMouseButtonControl");
+        if (Directory.Exists(ymouseDir))
+        {
+            return ymouseDir;
+        }
+        Directory.CreateDirectory(rmouseDir);
+        return rmouseDir;
     }
 }

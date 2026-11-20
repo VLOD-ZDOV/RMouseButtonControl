@@ -29,7 +29,15 @@ public static class SqliteConnectionStringHelper
             && !Path.IsPathRooted(dataSource)
         )
         {
-            builder.DataSource = Path.Combine(baseDirectory, dataSource);
+            var rmouseDb = Path.Combine(baseDirectory, "RMouseButtonControl.db");
+            if (File.Exists(rmouseDb))
+            {
+                builder.DataSource = rmouseDb;
+            }
+            else
+            {
+                builder.DataSource = Path.Combine(baseDirectory, dataSource);
+            }
         }
 
         return builder.ConnectionString;
