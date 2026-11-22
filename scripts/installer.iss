@@ -1,5 +1,5 @@
 #define MyAppName "RMouseButtonControl"
-#define MyAppVersion "0.29.0"
+#define MyAppVersion "0.30.0"
 #define MyAppPublisher "VLOD-ZDOV"
 #define MyAppURL "https://github.com/VLOD-ZDOV/RMouseButtonControl"
 #define MyAppExeName "rmouse-gui.exe"

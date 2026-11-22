@@ -18,7 +18,7 @@ public static class GetThemeVariant
                     : ThemeVariant.Dark,
                 2 => ThemeVariant.Light,
                 3 => ThemeVariant.Dark,
-                _ => throw new ArgumentOutOfRangeException($"Invalid theme id"),
+                _ => ThemeVariant.Default,
             };
     }
 }

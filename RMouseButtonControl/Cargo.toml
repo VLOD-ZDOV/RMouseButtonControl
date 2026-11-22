@@ -1,11 +1,11 @@
 [package]
 name = "rmousebuttoncontrol"
-version = "0.1.0"
+version = "0.30.0"
 edition = "2021"
 description = "High-performance, pure-safe Rust core engine for RMouseButtonControl (mouse remapping & input simulation)"
 
 [dependencies]
-rdev = "0.5"
+rdev = { version = "0.5", features = ["unstable_grab"] }
 fastrand = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

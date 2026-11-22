@@ -91,8 +91,85 @@ bool Database::open() {
         return false;
     }
 
+    initSchema(db);
+
     m_opened = true;
     return true;
+}
+
+void Database::initSchema(QSqlDatabase& db) {
+    QSqlQuery q(db);
+    q.exec("CREATE TABLE IF NOT EXISTS Profiles ("
+           "Id INTEGER PRIMARY KEY AUTOINCREMENT, "
+           "IsDefault INTEGER NOT NULL, "
+           "Checked INTEGER NOT NULL, "
+           "DisplayPriority INTEGER NOT NULL, "
+           "Name TEXT NOT NULL, "
+           "Description TEXT NOT NULL, "
+           "WindowCaption TEXT NOT NULL, "
+           "Process TEXT NOT NULL, "
+           "WindowClass TEXT NOT NULL, "
+           "ParentClass TEXT NOT NULL, "
+           "MatchType TEXT NOT NULL)");
+
+    q.exec("CREATE TABLE IF NOT EXISTS Settings ("
+           "Id INTEGER PRIMARY KEY AUTOINCREMENT, "
+           "Name TEXT NOT NULL, "
+           "Discriminator TEXT NOT NULL, "
+           "BoolValue INTEGER, "
+           "IntValue INTEGER, "
+           "StringValue TEXT)");
+
+    q.exec("CREATE TABLE IF NOT EXISTS Themes ("
+           "Id INTEGER PRIMARY KEY AUTOINCREMENT, "
+           "Name TEXT NOT NULL, "
+           "Background TEXT NOT NULL, "
+           "Highlight TEXT NOT NULL)");
+
+    q.exec("CREATE TABLE IF NOT EXISTS ButtonMappings ("
+           "Id INTEGER PRIMARY KEY AUTOINCREMENT, "
+           "Keys TEXT, "
+           "MouseButton INTEGER NOT NULL, "
+           "ProfileId INTEGER NOT NULL, "
+           "SimulatedKeystrokeType INTEGER, "
+           "AutoRepeatDelay INTEGER, "
+           "AutoRepeatRandomizeDelayEnabled INTEGER, "
+           "Selected INTEGER NOT NULL, "
+           "BlockOriginalMouseInput INTEGER, "
+           "Discriminator TEXT NOT NULL, "
+           "FOREIGN KEY(ProfileId) REFERENCES Profiles(Id) ON DELETE CASCADE)");
+
+    QSqlQuery countQ("SELECT COUNT(*) FROM Profiles", db);
+    if (countQ.next() && countQ.value(0).toInt() == 0) {
+        q.prepare("INSERT INTO Profiles (IsDefault, Checked, DisplayPriority, Name, Description, WindowCaption, Process, WindowClass, ParentClass, MatchType) "
+                  "VALUES (1, 1, 0, 'Default', 'Default Profile', 'N/A', '*', 'N/A', 'N/A', 'N/A')");
+        q.exec();
+        int defProfileId = q.lastInsertId().toInt();
+
+        for (int mb = 0; mb < 9; ++mb) {
+            QStringList reqDiscs = {"NothingMapping", "DisabledMapping", "SimulatedKeystroke", "RightClick"};
+            for (const QString& d : reqDiscs) {
+                QSqlQuery ins(db);
+                ins.prepare("INSERT INTO ButtonMappings (MouseButton, ProfileId, Keys, SimulatedKeystrokeType, "
+                            "AutoRepeatDelay, AutoRepeatRandomizeDelayEnabled, BlockOriginalMouseInput, Selected, Discriminator) "
+                            "VALUES (?, ?, NULL, 4, 33, 0, 0, ?, ?)");
+                ins.addBindValue(mb);
+                ins.addBindValue(defProfileId);
+                ins.addBindValue(d == "NothingMapping" ? 1 : 0);
+                ins.addBindValue(d);
+                ins.exec();
+            }
+        }
+
+        q.exec("INSERT OR IGNORE INTO Themes (Id, Name, Background, Highlight) VALUES (1, 'Default', 'SystemAltHighColor', 'SystemAccentColor')");
+        q.exec("INSERT OR IGNORE INTO Themes (Id, Name, Background, Highlight) VALUES (2, 'Light', 'White', 'Yellow')");
+        q.exec("INSERT OR IGNORE INTO Themes (Id, Name, Background, Highlight) VALUES (3, 'Dark', 'Black', '#3700b3')");
+
+        q.exec("INSERT OR IGNORE INTO Settings (Id, Name, Discriminator, BoolValue, IntValue, StringValue) VALUES (1, 'StartMinimized', 'SettingBool', 1, NULL, NULL)");
+        q.exec("INSERT OR IGNORE INTO Settings (Id, Name, Discriminator, BoolValue, IntValue, StringValue) VALUES (2, 'Theme', 'SettingInt', NULL, 0, NULL)");
+        q.exec("INSERT OR IGNORE INTO Settings (Id, Name, Discriminator, BoolValue, IntValue, StringValue) VALUES (3, 'Language', 'SettingString', NULL, NULL, 'system')");
+        q.exec("INSERT OR IGNORE INTO Settings (Id, Name, Discriminator, BoolValue, IntValue, StringValue) VALUES (4, 'PreferredGui', 'SettingString', NULL, NULL, 'qt')");
+    }
 }
 
 void Database::close() {
@@ -249,7 +326,10 @@ bool Database::saveAllProfiles(const QVector<ProfileModel>& profiles) {
     QSqlDatabase db = QSqlDatabase::database("rmouse_gui_db");
     db.transaction();
     for (const auto& p : profiles) {
-        saveProfile(p);
+        if (!saveProfile(p)) {
+            db.rollback();
+            return false;
+        }
     }
     return db.commit();
 }

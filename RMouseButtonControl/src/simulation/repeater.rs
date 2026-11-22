@@ -10,20 +10,21 @@ pub struct RepeatWorker {
 }
 
 impl RepeatWorker {
-    /// Computes sleep time with optional 10% jitter (1:1 with C# RepeatedWhileButtonDownService)
+    /// Computes sleep time with optional 10% jitter (minimum 10ms to prevent CPU busy-spinning)
     #[must_use]
     pub fn compute_delay_ms(base_delay: u32, randomize: bool) -> u64 {
-        if !randomize || base_delay == 0 {
-            return base_delay as u64;
+        let base = base_delay.max(10);
+        if !randomize {
+            return base as u64;
         }
 
         let rand_percent = fastrand::f64() * 0.1; // 0.0 .. 0.10
-        let delta = (base_delay as f64 * rand_percent).round() as u32;
+        let delta = (base as f64 * rand_percent).round() as u32;
 
         let final_delay = if fastrand::bool() {
-            base_delay.saturating_add(delta)
+            base.saturating_add(delta)
         } else {
-            base_delay.saturating_sub(delta).max(1)
+            base.saturating_sub(delta).max(10)
         };
 
         final_delay as u64
@@ -63,9 +64,7 @@ impl RepeatWorker {
 
     pub fn stop(&mut self) {
         self.stop_signal.store(true, Ordering::Release);
-        if let Some(handle) = self.handle.take() {
-            let _ = handle.join();
-        }
+        self.handle.take();
     }
 
     #[must_use]

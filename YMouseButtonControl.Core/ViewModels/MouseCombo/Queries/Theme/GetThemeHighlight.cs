@@ -18,10 +18,10 @@ public static class GetThemeHighlight
             {
                 return Highlight;
             }
-            var themeId = db.SettingInts.First(x => x.Name == "Theme").IntValue;
+            var themeId = db.SettingInts.FirstOrDefault(x => x.Name == "Theme")?.IntValue ?? 1;
             var themeBackground =
                 db.Themes.Find(themeId)?.Highlight
-                ?? throw new Exception($"Error retrieving theme highlight for id {themeId}");
+                ?? "SystemAccentColor";
             Highlight = GetHighlight(themeBackground);
             return Highlight;
         }

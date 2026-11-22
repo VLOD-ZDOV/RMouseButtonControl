@@ -469,7 +469,9 @@ void MainWindow::onCopyProfile() {
         Database::instance().addProfile(p);
         for (int mb = 0; mb < 9; ++mb) {
             for (auto it = src.mappingsByButton.value(mb).begin(); it != src.mappingsByButton.value(mb).end(); ++it) {
+                int newId = p.mappingsByButton[mb][it.key()].id;
                 p.mappingsByButton[mb][it.key()] = it.value();
+                p.mappingsByButton[mb][it.key()].id = newId;
                 p.mappingsByButton[mb][it.key()].profileId = p.id;
             }
         }

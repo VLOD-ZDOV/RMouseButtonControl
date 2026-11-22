@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://aka.ms/winget-manifest.singleton.1.6.0.schema.json
 PackageIdentifier: VLOD-ZDOV.RMouseButtonControl
-PackageVersion: 0.29.0
+PackageVersion: 0.30.0
 PackageName: RMouseButtonControl
 Publisher: VLOD-ZDOV
 Moniker: rmouse
@@ -12,7 +12,7 @@ PackageUrl: https://github.com/VLOD-ZDOV/RMouseButtonControl
 Installers:
   - Architecture: x64
     InstallerType: inno
-    InstallerUrl: https://github.com/VLOD-ZDOV/RMouseButtonControl/releases/download/0.29.0/RMouseButtonControl-Windows-Setup.exe
+    InstallerUrl: https://github.com/VLOD-ZDOV/RMouseButtonControl/releases/download/0.30.0/RMouseButtonControl-Windows-Setup.exe
     Scope: machine
     InstallerSwitches:
       Silent: /VERYSILENT /NORESTART /SUPPRESSMSGBOXES

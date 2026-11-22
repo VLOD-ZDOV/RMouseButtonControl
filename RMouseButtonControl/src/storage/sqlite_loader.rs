@@ -120,7 +120,22 @@ impl SqliteProfileLoader {
 
     #[must_use]
     pub fn default_db_path() -> Option<std::path::PathBuf> {
-        let home = std::env::var("HOME").ok()?;
+        #[cfg(target_os = "windows")]
+        {
+            if let Ok(appdata) = std::env::var("APPDATA") {
+                let base = std::path::PathBuf::from(appdata);
+                let new_path = base.join("RMouseButtonControl").join("RMouseButtonControl.db");
+                if new_path.exists() {
+                    return Some(new_path);
+                }
+                let old_path = base.join("YMouseButtonControl").join("YMouseButtonControl.db");
+                if old_path.exists() {
+                    return Some(old_path);
+                }
+                return Some(new_path);
+            }
+        }
+        let home = std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE")).ok()?;
         let base = std::path::PathBuf::from(home);
         let new_path = base.join(".config").join("RMouseButtonControl").join("RMouseButtonControl.db");
         if new_path.exists() {

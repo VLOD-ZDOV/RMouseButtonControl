@@ -174,6 +174,86 @@ fn get_key_map() -> &'static HashMap<&'static str, (KeyOrButton, bool)> {
         m.insert("mmb", (KeyOrButton::Mouse(MouseButton::MouseButton3), false));
         m.insert("mb4", (KeyOrButton::Mouse(MouseButton::MouseButton4), false));
         m.insert("mb5", (KeyOrButton::Mouse(MouseButton::MouseButton5), false));
+        m.insert("mwup", (KeyOrButton::Mouse(MouseButton::MouseWheelUp), false));
+        m.insert("mwu", (KeyOrButton::Mouse(MouseButton::MouseWheelUp), false));
+        m.insert("mwdn", (KeyOrButton::Mouse(MouseButton::MouseWheelDown), false));
+        m.insert("mwd", (KeyOrButton::Mouse(MouseButton::MouseWheelDown), false));
+        m.insert("tiltl", (KeyOrButton::Mouse(MouseButton::MouseWheelLeft), false));
+        m.insert("mwl", (KeyOrButton::Mouse(MouseButton::MouseWheelLeft), false));
+        m.insert("tiltr", (KeyOrButton::Mouse(MouseButton::MouseWheelRight), false));
+        m.insert("mwr", (KeyOrButton::Mouse(MouseButton::MouseWheelRight), false));
+
+        // Media keys
+        #[cfg(target_os = "windows")]
+        const VK_VOL_UP: u32 = 0xAF;
+        #[cfg(target_os = "windows")]
+        const VK_VOL_DOWN: u32 = 0xAE;
+        #[cfg(target_os = "windows")]
+        const VK_MUTE: u32 = 0xAD;
+        #[cfg(target_os = "windows")]
+        const VK_PLAY_PAUSE: u32 = 0xB3;
+        #[cfg(target_os = "windows")]
+        const VK_STOP: u32 = 0xB2;
+        #[cfg(target_os = "windows")]
+        const VK_NEXT: u32 = 0xB0;
+        #[cfg(target_os = "windows")]
+        const VK_PREV: u32 = 0xB1;
+        #[cfg(target_os = "windows")]
+        const VK_BROWSER_BACK: u32 = 0xA6;
+        #[cfg(target_os = "windows")]
+        const VK_BROWSER_FORWARD: u32 = 0xA7;
+        #[cfg(target_os = "windows")]
+        const VK_BROWSER_REFRESH: u32 = 0xA8;
+        #[cfg(target_os = "windows")]
+        const VK_BROWSER_HOME: u32 = 0xAC;
+
+        #[cfg(not(target_os = "windows"))]
+        const VK_VOL_UP: u32 = 115;
+        #[cfg(not(target_os = "windows"))]
+        const VK_VOL_DOWN: u32 = 114;
+        #[cfg(not(target_os = "windows"))]
+        const VK_MUTE: u32 = 113;
+        #[cfg(not(target_os = "windows"))]
+        const VK_PLAY_PAUSE: u32 = 164;
+        #[cfg(not(target_os = "windows"))]
+        const VK_STOP: u32 = 166;
+        #[cfg(not(target_os = "windows"))]
+        const VK_NEXT: u32 = 163;
+        #[cfg(not(target_os = "windows"))]
+        const VK_PREV: u32 = 165;
+        #[cfg(not(target_os = "windows"))]
+        const VK_BROWSER_BACK: u32 = 158;
+        #[cfg(not(target_os = "windows"))]
+        const VK_BROWSER_FORWARD: u32 = 159;
+        #[cfg(not(target_os = "windows"))]
+        const VK_BROWSER_REFRESH: u32 = 173;
+        #[cfg(not(target_os = "windows"))]
+        const VK_BROWSER_HOME: u32 = 172;
+
+        m.insert("volup", (KeyOrButton::Key(Key::Unknown(VK_VOL_UP)), false));
+        m.insert("vol+", (KeyOrButton::Key(Key::Unknown(VK_VOL_UP)), false));
+        m.insert("voldn", (KeyOrButton::Key(Key::Unknown(VK_VOL_DOWN)), false));
+        m.insert("vol-", (KeyOrButton::Key(Key::Unknown(VK_VOL_DOWN)), false));
+        m.insert("mute", (KeyOrButton::Key(Key::Unknown(VK_MUTE)), false));
+        m.insert("play", (KeyOrButton::Key(Key::Unknown(VK_PLAY_PAUSE)), false));
+        m.insert("playpause", (KeyOrButton::Key(Key::Unknown(VK_PLAY_PAUSE)), false));
+        m.insert("mediaplay", (KeyOrButton::Key(Key::Unknown(VK_PLAY_PAUSE)), false));
+        m.insert("stop", (KeyOrButton::Key(Key::Unknown(VK_STOP)), false));
+        m.insert("mediastop", (KeyOrButton::Key(Key::Unknown(VK_STOP)), false));
+        m.insert("next", (KeyOrButton::Key(Key::Unknown(VK_NEXT)), false));
+        m.insert("medianext", (KeyOrButton::Key(Key::Unknown(VK_NEXT)), false));
+        m.insert("prev", (KeyOrButton::Key(Key::Unknown(VK_PREV)), false));
+        m.insert("mediaprev", (KeyOrButton::Key(Key::Unknown(VK_PREV)), false));
+
+        // Browser keys
+        m.insert("back", (KeyOrButton::Key(Key::Unknown(VK_BROWSER_BACK)), false));
+        m.insert("browserback", (KeyOrButton::Key(Key::Unknown(VK_BROWSER_BACK)), false));
+        m.insert("forward", (KeyOrButton::Key(Key::Unknown(VK_BROWSER_FORWARD)), false));
+        m.insert("browserforward", (KeyOrButton::Key(Key::Unknown(VK_BROWSER_FORWARD)), false));
+        m.insert("refresh", (KeyOrButton::Key(Key::Unknown(VK_BROWSER_REFRESH)), false));
+        m.insert("browserrefresh", (KeyOrButton::Key(Key::Unknown(VK_BROWSER_REFRESH)), false));
+        m.insert("browserhome", (KeyOrButton::Key(Key::Unknown(VK_BROWSER_HOME)), false));
+        m.insert("webhome", (KeyOrButton::Key(Key::Unknown(VK_BROWSER_HOME)), false));
 
         m
     })
@@ -200,6 +280,11 @@ pub fn parse_keys(input: &str) -> Result<ParsedKeySequence, String> {
             if let Some(j) = found_end {
                 let tag: String = chars[(i + 1)..j].iter().collect();
                 let lower_tag = tag.to_lowercase();
+                if lower_tag.starts_with("wait") {
+                    // Supported timing tag, e.g. {WAIT:50} or {WAIT}
+                    i = j + 1;
+                    continue;
+                }
                 if let Some(&(target, is_mod)) = map.get(lower_tag.as_str()) {
                     keys.push(ParsedKey {
                         target,

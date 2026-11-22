@@ -3,6 +3,7 @@
 #include <QString>
 #include <QVector>
 #include <QMap>
+#include <QSqlDatabase>
 
 struct ButtonMappingModel {
     int id = 0;
@@ -65,6 +66,7 @@ public:
 
 private:
     Database();
+    void initSchema(QSqlDatabase& db);
     bool m_opened = false;
     QString m_dbPath;
 };

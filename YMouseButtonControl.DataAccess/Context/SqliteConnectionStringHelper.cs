@@ -30,13 +30,18 @@ public static class SqliteConnectionStringHelper
         )
         {
             var rmouseDb = Path.Combine(baseDirectory, "RMouseButtonControl.db");
+            var ymouseDb = Path.Combine(baseDirectory, "YMouseButtonControl.db");
             if (File.Exists(rmouseDb))
             {
                 builder.DataSource = rmouseDb;
             }
+            else if (File.Exists(ymouseDb))
+            {
+                builder.DataSource = ymouseDb;
+            }
             else
             {
-                builder.DataSource = Path.Combine(baseDirectory, dataSource);
+                builder.DataSource = rmouseDb;
             }
         }
 

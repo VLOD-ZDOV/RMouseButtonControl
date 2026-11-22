@@ -30,8 +30,13 @@ impl CompiledProfile {
         for &btn in &buttons {
             let mapping = profile.get_mapping(btn);
             if let Some(ref keys_str) = mapping.keys {
-                if let Ok(seq) = parse_keys(keys_str) {
-                    parsed_keys.insert(btn, seq);
+                match parse_keys(keys_str) {
+                    Ok(seq) => {
+                        parsed_keys.insert(btn, seq);
+                    }
+                    Err(err) => {
+                        eprintln!("[CompiledProfile] Warning: failed to parse macro for profile '{}', button {:?}: {err}", profile.name, btn);
+                    }
                 }
             }
         }
