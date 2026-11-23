@@ -44,6 +44,9 @@ impl RepeatWorker {
         let stop_clone = Arc::clone(&stop_signal);
 
         let handle = thread::spawn(move || {
+            // Immediate first execution upon pressing button
+            action(&keys);
+
             while !stop_clone.load(Ordering::Acquire) {
                 let delay = Self::compute_delay_ms(base_delay_ms, randomize);
                 thread::sleep(Duration::from_millis(delay));

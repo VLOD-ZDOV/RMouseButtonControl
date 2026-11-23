@@ -69,6 +69,11 @@ pub trait Simulator: Send + Sync {
             stack.push(pk);
             self.press_target(pk.target);
 
+            // Hold mouse buttons down for 18ms so game engines and UI register the click
+            if matches!(pk.target, KeyOrButton::Mouse(_)) {
+                thread::sleep(Duration::from_millis(18));
+            }
+
             if let Some(delay) = delay_ms {
                 if delay > 0 {
                     thread::sleep(Duration::from_millis(delay as u64));

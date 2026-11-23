@@ -722,7 +722,7 @@ dependencies = [
 
 [[package]]
 name = "rmousebuttoncontrol"
-version = "0.1.0"
+version = "0.30.1"
 dependencies = [
  "evdev",
  "fastrand",
